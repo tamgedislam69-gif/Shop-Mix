@@ -3,58 +3,49 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Settings, X, Grid, Image as ImageIcon, Palette, 
   Layout, Moon, Sun, Monitor, Clock, Plus, Trash2,
-  ChevronRight, RefreshCw, Zap
+  ChevronRight, RefreshCw, Zap, Code2, Sparkles, Upload
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
-import { INITIAL_SETTINGS } from '../constants';
+import { INITIAL_SETTINGS, THEME_PRESETS } from '../constants';
 
 const MASTER_THEMES = [
   {
-    id: 'default',
-    name: 'Default Orange',
-    primary: '#FF6B00',
-    background: '#FDFDFD',
-    text: '#111827',
-    preview: 'bg-[#FF6B00]'
+    id: 'luxury-dark',
+    name: 'Luxury Dark (Gold)',
+    ...THEME_PRESETS['luxury-dark'],
+    preview: 'bg-[#000000] border-[#D4AF37]'
   },
   {
-    id: 'premium-dark',
-    name: 'Premium Dark',
-    primary: '#EAB308',
-    background: '#111827',
-    text: '#FFFFFF',
-    preview: 'bg-[#111827] border-yellow-500'
-  },
-  {
-    id: 'minimalist',
+    id: 'minimal-white',
     name: 'Minimalist White',
-    primary: '#18181B',
-    background: '#F8FAFC',
-    text: '#0F172A',
+    ...THEME_PRESETS['minimal-white'],
     preview: 'bg-white border-slate-200'
   },
   {
-    id: 'ocean-blue',
-    name: 'Ocean Blue',
-    primary: '#0EA5E9',
-    background: '#F0F9FF',
-    text: '#0C4A6E',
-    preview: 'bg-[#0EA5E9]'
+    id: 'festive',
+    name: 'Festive Red',
+    ...THEME_PRESETS['festive'],
+    preview: 'bg-[#D62828] border-white'
   },
   {
-    id: 'nature-green',
-    name: 'Nature Green',
-    primary: '#10B981',
-    background: '#F0FDF4',
-    text: '#064E3B',
-    preview: 'bg-[#10B981]'
+    id: 'default',
+    name: 'Default Shop Mix',
+    colors: {
+      primary: '#FF6B00',
+      background: '#FDFDFD',
+      textHeadings: '#111827',
+      headerBg: '#FFFFFF',
+      footerBg: '#1A1A1A',
+      cardBg: '#FFFFFF',
+    },
+    preview: 'bg-[#FF6B00]'
   }
 ];
 
 export const AdminProcessSettings: React.FC = () => {
   const { settings, updateSettings, isSettingsOpen, setIsSettingsOpen } = useApp();
-  const [activeSegment, setActiveSegment] = useState<'layout' | 'theme' | 'carousel' | 'security'>('theme');
+  const [activeSegment, setActiveSegment] = useState<'layout' | 'theme' | 'carousel' | 'security' | 'advanced'>('theme');
   const [newPin, setNewPin] = useState('');
   const [isPinEnabled, setIsPinEnabled] = useState(() => {
     const saved = localStorage.getItem('is_drawer_pin_enabled');
@@ -91,21 +82,22 @@ export const AdminProcessSettings: React.FC = () => {
     updateSettings(newSettings);
   };
 
-  const applyTheme = (theme: typeof MASTER_THEMES[0]) => {
+  const applyTheme = (theme: any) => {
     const newSettings = { ...settings };
     if (!newSettings.customization) newSettings.customization = { ...INITIAL_SETTINGS.customization! };
     
-    newSettings.primaryColor = theme.primary;
+    newSettings.primaryColor = theme.colors.primary;
     newSettings.customization.colors = {
       ...newSettings.customization.colors,
-      primary: theme.primary,
-      background: theme.background,
-      textHeadings: theme.text,
-      headerBg: theme.id === 'premium-dark' ? '#1F2937' : '#FFFFFF',
-      footerBg: theme.id === 'premium-dark' ? '#000000' : '#1A1A1A',
-      cardBg: theme.id === 'premium-dark' ? '#1F2937' : '#FFFFFF',
+      ...theme.colors
     };
-    newSettings.customization.darkMode = theme.id === 'premium-dark';
+    newSettings.customization.theme = theme.id;
+    newSettings.customization.fonts = {
+      ...newSettings.customization.fonts,
+      heading: theme.fonts?.heading || 'Poppins',
+      body: theme.fonts?.body || 'Inter'
+    };
+    newSettings.customization.darkMode = theme.id === 'luxury-dark';
     
     updateSettings(newSettings);
   };
@@ -164,12 +156,12 @@ export const AdminProcessSettings: React.FC = () => {
               </div>
 
               <div className="flex border-b">
-                {(['theme', 'layout', 'carousel', 'security'] as const).map(seg => (
+                {(['theme', 'layout', 'carousel', 'security', 'advanced'] as const).map(seg => (
                   <button 
                     key={seg}
                     onClick={() => setActiveSegment(seg)}
                     className={cn(
-                      "flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all border-b-2",
+                      "flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2",
                       activeSegment === seg ? "border-black text-black" : "border-transparent text-gray-400"
                     )}
                   >
@@ -197,27 +189,49 @@ export const AdminProcessSettings: React.FC = () => {
                       </button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
-                        <Palette size={12} /> Master Themes
+                        <Palette size={12} /> Master Theme Engine
                       </label>
-                      <div className="grid grid-cols-1 gap-2">
+                      <div className="bg-black/5 p-5 rounded-3xl border border-gray-100 mb-4">
+                        <p className="text-[10px] text-gray-500 font-bold leading-relaxed">
+                          <Sparkles size={10} className="inline mr-1 text-primary" /> 
+                          Instantly transform your shop's identity. Switching a theme updates colors, fonts, and layout presets globally.
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {MASTER_THEMES.map(theme => (
                           <button 
                             key={theme.id}
                             onClick={() => applyTheme(theme)}
                             className={cn(
-                              "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
-                              (settings.primaryColor === theme.primary && c.darkMode === (theme.id === 'premium-dark'))
-                                ? "border-black bg-gray-50" 
+                              "group relative overflow-hidden rounded-3xl border-2 transition-all duration-500 text-left",
+                              (settings.customization?.theme === theme.id)
+                                ? "border-black ring-4 ring-black/5 bg-white shadow-xl scale-[1.02]" 
                                 : "border-gray-100 bg-white hover:border-gray-300"
                             )}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className={cn("w-8 h-8 rounded-full shadow-inner", theme.preview)} />
-                              <span className="text-sm font-bold">{theme.name}</span>
+                            <div className={cn("h-32 w-full transition-transform duration-700 group-hover:scale-110", theme.preview)} />
+                            <div className="p-4 flex items-center justify-between">
+                              <div>
+                                <span className="text-[11px] font-black uppercase tracking-widest text-black block">
+                                  {theme.name}
+                                </span>
+                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Premium Template</span>
+                              </div>
+                              <div className={cn(
+                                "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500",
+                                (settings.customization?.theme === theme.id) ? "bg-black text-white" : "bg-gray-100 text-transparent"
+                              )}>
+                                <Zap size={10} />
+                              </div>
                             </div>
-                            <ChevronRight size={16} className="text-gray-400" />
+                            
+                            {settings.customization?.theme === theme.id && (
+                              <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20">
+                                <span className="text-[7px] font-black uppercase tracking-widest text-white">Active</span>
+                              </div>
+                            )}
                           </button>
                         ))}
                       </div>
@@ -442,6 +456,38 @@ export const AdminProcessSettings: React.FC = () => {
                             </div>
                           ))}
                        </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSegment === 'advanced' && (
+                  <div className="space-y-8">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                        <Code2 size={12} /> Custom HTML / Scripts
+                      </label>
+                      <p className="text-[10px] text-gray-400 font-bold leading-relaxed">
+                        Paste any custom code here (Facebook Pixel, Google Analytics, Live Chat, etc.). 
+                        It will be injected into the website automatically.
+                      </p>
+                      <textarea 
+                        value={c.advanced?.customHtml || ''}
+                        onChange={(e) => updateNested('customization.advanced.customHtml', e.target.value)}
+                        placeholder="<!-- Paste scripts here -->"
+                        className="w-full h-48 bg-gray-50 border border-gray-100 rounded-2xl py-4 px-5 text-xs font-mono outline-none focus:ring-2 focus:ring-black transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-4 pt-6 border-t">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                        <Palette size={12} /> Custom CSS
+                      </label>
+                      <textarea 
+                        value={c.advanced?.customCss || ''}
+                        onChange={(e) => updateNested('customization.advanced.customCss', e.target.value)}
+                        placeholder=".my-class { color: red; }"
+                        className="w-full h-48 bg-gray-50 border border-gray-100 rounded-2xl py-4 px-5 text-xs font-mono outline-none focus:ring-2 focus:ring-black transition-all"
+                      />
                     </div>
                   </div>
                 )}

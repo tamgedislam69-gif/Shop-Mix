@@ -219,7 +219,7 @@ const HomePage: React.FC = () => {
                >
                   {carousel?.urls && carousel.urls.length > 0 ? (
                     <img 
-                      src={carousel.urls[currentSlide]} 
+                      src={carousel.urls[currentSlide] || undefined} 
                       className="w-full h-full object-cover"
                       alt="Banner"
                       referrerPolicy="no-referrer"
@@ -232,7 +232,7 @@ const HomePage: React.FC = () => {
                       playsInline
                       className="w-full h-full object-cover opacity-60 scale-105"
                     >
-                      <source src={settings.heroVideoUrl} type="video/mp4" />
+                      <source src={settings.heroVideoUrl || undefined} type="video/mp4" />
                     </video>
                   )}
                </motion.div>

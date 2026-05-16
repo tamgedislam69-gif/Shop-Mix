@@ -123,7 +123,7 @@ const ProductPage: React.FC = () => {
           >
              {product.videoUrl ? (
                 <video 
-                  src={product.videoUrl} 
+                  src={product.videoUrl || undefined} 
                   autoPlay 
                   muted 
                   loop 
@@ -135,7 +135,7 @@ const ProductPage: React.FC = () => {
                   key={selectedImage}
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  src={selectedImage} 
+                  src={selectedImage || undefined} 
                   alt={product.name} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
                   referrerPolicy="no-referrer"
@@ -161,7 +161,7 @@ const ProductPage: React.FC = () => {
                     )}
                     style={selectedImage === img ? { borderColor: c?.primary || settings.primaryColor } : {}}
                    >
-                       <img src={img} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                       <img src={img || undefined} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                    </button>
                ))}
           </div>

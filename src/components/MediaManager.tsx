@@ -13,17 +13,50 @@ import {
   Minimize2,
   Sun,
   Contrast,
-  ImagePlay
+  ImagePlay,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { Media } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../lib/firebase';
 
 const MediaManager: React.FC = () => {
   const { media, setMedia, settings } = useApp();
   const [editingMedia, setEditingMedia] = useState<Partial<Media & { width?: number, height?: number, brightness?: number, contrast?: number }> | null>(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const storageRef = ref(storage, `media/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      
+      setEditingMedia(prev => ({
+        ...prev,
+        url,
+        type: file.type.startsWith('video/') ? 'video' : 'image',
+        title: prev?.title || file.name,
+        description: prev?.description || '',
+        brightness: 100,
+        contrast: 100
+      }));
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Upload failed. Please check your Firebase Storage rules.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const filteredMedia = media.filter(m => {
     const matchesSearch = m.title.toLowerCase().includes(search.toLowerCase()) || 
@@ -114,13 +147,13 @@ const MediaManager: React.FC = () => {
               <div className="w-full h-full overflow-hidden">
                 {m.type === 'image' ? (
                   <img 
-                    src={m.url} 
+                    src={m.url || undefined} 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                     referrerPolicy="no-referrer" 
                     loading="lazy"
                   />
                 ) : (
-                  <video src={m.url} className="w-full h-full object-cover" muted />
+                  <video src={m.url || undefined} className="w-full h-full object-cover" muted />
                 )}
               </div>
               
@@ -174,14 +207,14 @@ const MediaManager: React.FC = () => {
                     <div className="aspect-video bg-gray-100 rounded-3xl overflow-hidden shadow-inner relative border border-gray-100">
                         {editingMedia.type === 'image' ? (
                             <img 
-                                src={editingMedia.url} 
+                                src={editingMedia.url || undefined} 
                                 className="w-full h-full object-contain" 
                                 style={{ 
                                     filter: `brightness(${editingMedia.brightness}%) contrast(${editingMedia.contrast}%)`
                                 }}
                             />
                         ) : (
-                            <video src={editingMedia.url} className="w-full h-full object-cover" controls />
+                            <video src={editingMedia.url || undefined} className="w-full h-full object-cover" controls />
                         )}
                         <div className="absolute top-4 right-4 px-3 py-1 bg-black/50 backdrop-blur-md rounded-lg text-[10px] text-white font-black uppercase tracking-widest">
                             {editingMedia.type} Preview
@@ -259,15 +292,48 @@ const MediaManager: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest pl-1">Source URL (Hot Replacement)</label>
-                      <input 
-                        required 
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 font-mono text-xs outline-none ring-2 ring-transparent focus:ring-primary/20 transition-all"
-                        value={editingMedia.url}
-                        onChange={(e) => setEditingMedia({...editingMedia, url: e.target.value})}
-                        placeholder="https://images.unsplash.com/..."
-                      />
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest pl-1">Media Source</label>
+                      <div className="flex flex-col gap-4">
+                        <div 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full h-32 border-2 border-dashed border-gray-100 rounded-3xl flex flex-col items-center justify-center gap-2 hover:border-black hover:bg-gray-50 transition-all cursor-pointer group relative overflow-hidden"
+                        >
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="animate-spin text-primary" size={24} />
+                              <span className="text-[10px] font-black uppercase tracking-widest animate-pulse">Uploading to Cloud...</span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="bg-black text-white p-3 rounded-full group-hover:scale-110 transition-all shadow-lg">
+                                <Upload size={18} />
+                              </div>
+                              <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Choose from Gallery</span>
+                            </>
+                          )}
+                          <input 
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*,video/*"
+                            onChange={handleFileUpload}
+                          />
+                        </div>
+
+                        <div className="relative group">
+                          <input 
+                            required 
+                            className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 font-mono text-[10px] outline-none ring-2 ring-transparent focus:ring-primary/20 transition-all font-bold pr-20"
+                            value={editingMedia.url}
+                            onChange={(e) => setEditingMedia({...editingMedia, url: e.target.value})}
+                            placeholder="Or paste direct image/video URL here..."
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-gray-300 tracking-widest">
+                            Manual URL
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="space-y-2">

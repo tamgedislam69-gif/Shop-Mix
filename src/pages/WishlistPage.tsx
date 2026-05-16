@@ -66,7 +66,7 @@ const WishlistPage: React.FC = () => {
               style={{ borderRadius: `${l?.borderRadius || 16}px` }}
             >
               <Link to={`/product/${product.id}`} className="block relative aspect-square">
-                <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
+                <img src={product.image || undefined} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
                 <button 
                   onClick={(e) => {
                     e.preventDefault();

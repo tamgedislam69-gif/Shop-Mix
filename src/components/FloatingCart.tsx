@@ -39,7 +39,7 @@ const FloatingCart: React.FC = () => {
                         <div className="max-h-[300px] overflow-y-auto space-y-4 pr-2 scrollbar-hide">
                             {cart.map(item => (
                                 <div key={item.id} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                                    <img src={item.image} className="w-12 h-12 rounded-xl object-cover" />
+                                    <img src={item.image || undefined} className="w-12 h-12 rounded-xl object-cover" />
                                     <div className="flex-grow">
                                         <p className="text-[10px] font-bold line-clamp-1">{item.name}</p>
                                         <p className="text-[10px] text-primary font-black" style={{ color: settings.primaryColor }}>{formatPrice(item.price)}</p>

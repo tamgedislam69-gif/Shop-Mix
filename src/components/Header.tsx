@@ -22,6 +22,7 @@ const Header: React.FC = () => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
+  const [pinAction, setPinAction] = useState<'menu' | 'admin' | 'settings' | null>(null);
   const navigate = useNavigate();
   const { t } = useTranslate();
 
@@ -29,12 +30,33 @@ const Header: React.FC = () => {
     e.preventDefault();
     const storedPin = localStorage.getItem('drawer_pin') || '112233';
     if (pinInput === storedPin) {
-      setIsMenuOpen(true);
+      if (pinAction === 'menu') {
+        setIsMenuOpen(true);
+      } else if (pinAction === 'admin') {
+        navigate('/secret-admin-access');
+        setIsMenuOpen(false);
+      } else if (pinAction === 'settings') {
+        setIsSettingsOpen(true);
+        setIsMenuOpen(false);
+      }
       setShowPinModal(false);
       setPinInput('');
+      setPinAction(null);
     } else {
       alert('ভুল পিন কোড! (Wrong PIN!)');
     }
+  };
+
+  const handleAdminClick = (e: React.MouseEvent, action: 'admin' | 'settings') => {
+    if (isAdmin) {
+      if (action === 'admin') navigate('/secret-admin-access');
+      else setIsSettingsOpen(true);
+      setIsMenuOpen(false);
+      return;
+    }
+    
+    setPinAction(action);
+    setShowPinModal(true);
   };
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -150,8 +172,9 @@ const Header: React.FC = () => {
               setIsMenuOpen(false);
               return;
             }
-            const isPinEnabled = localStorage.getItem('is_drawer_pin_enabled') !== 'false';
+            const isPinEnabled = localStorage.getItem('is_drawer_pin_enabled') === 'true'; // Only if explicitly enabled
             if (isPinEnabled) {
+              setPinAction('menu');
               setShowPinModal(true);
             } else {
               setIsMenuOpen(true);
@@ -298,24 +321,30 @@ const Header: React.FC = () => {
                   {v?.wishlistBtn !== false && <Link to="/wishlist" onClick={() => setIsMenuOpen(false)}>{t('উইশলিস্ট', 'Wishlist')}</Link>}
                   <Link to="/track-order" onClick={() => setIsMenuOpen(false)}>{t('অর্ডার ট্র্যাক করুন', 'Track Order')}</Link>
                   <Link to="/cart" onClick={() => setIsMenuOpen(false)}>{t('আমার কার্ট', 'My Cart')}</Link>
-                  {isAdmin ? (
-                    <>
-                      <Link to="/secret-admin-access" onClick={() => setIsMenuOpen(false)}>Admin Dashboard</Link>
-                      <button 
-                        onClick={() => { setIsSettingsOpen(true); setIsMenuOpen(false); }}
-                        className="text-left flex items-center gap-2 hover:text-primary transition-colors"
-                      >
-                         <Settings size={16} /> All Process Settings
-                      </button>
-                      <button 
-                        className="text-left py-2 text-red-500 font-bold"
-                        onClick={() => { logout(); setIsMenuOpen(false); navigate('/'); }}
-                      >
-                        Logout
-                      </button>
-                    </>
-                  ) : (
-                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>{t('লগইন', 'Admin Login')}</Link>
+                  
+                  <hr className="border-gray-100 my-2" />
+                  
+                  <button 
+                    onClick={(e) => handleAdminClick(e, 'admin')}
+                    className="text-left font-black text-xs uppercase tracking-widest hover:text-primary transition-colors"
+                  >
+                    {t('অ্য্যাডমিন ড্যাশবোর্ড', 'Admin Dashboard')}
+                  </button>
+                  
+                  <button 
+                    onClick={(e) => handleAdminClick(e, 'settings')}
+                    className="text-left flex items-center gap-2 hover:text-primary transition-colors font-black text-xs uppercase tracking-widest"
+                  >
+                     <Settings size={16} /> {t('সব সেটিংস', 'All Process Settings')}
+                  </button>
+
+                  {isAdmin && (
+                    <button 
+                      className="text-left py-2 text-red-500 font-bold uppercase text-[10px] tracking-widest"
+                      onClick={() => { logout(); setIsMenuOpen(false); navigate('/'); }}
+                    >
+                      Logout
+                    </button>
                   )}
                 </nav>
                 

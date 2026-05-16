@@ -134,13 +134,20 @@
   .product-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: var(--grid-gap, var(--card-gap, 24px)) !important;
+    gap: 12px !important;
     width: 100% !important;
+  }
+
+  @media (min-width: 640px) {
+    .product-grid {
+      gap: 16px !important;
+    }
   }
 
   @media (min-width: 1024px) {
     .product-grid {
       grid-template-columns: repeat(var(--grid-cols, 4), minmax(0, 1fr)) !important;
+      gap: var(--grid-gap, var(--card-gap, 24px)) !important;
     }
   }
 

@@ -205,7 +205,9 @@ export interface CustomizationSettings {
   };
   advanced?: {
     customCss: string;
+    customHtml: string;
   };
+  theme?: 'default' | 'luxury-dark' | 'minimal-white' | 'festive';
 }
 
 export interface SiteSettings {

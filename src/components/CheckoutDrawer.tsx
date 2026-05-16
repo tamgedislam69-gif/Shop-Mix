@@ -119,30 +119,51 @@ const CheckoutDrawer: React.FC = () => {
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/8801771357329?text=${encodedMessage}`;
 
-    // Small delay to simulate processing before redirect
-    setTimeout(() => {
-      window.open(whatsappUrl, '_blank');
+    // 1. Save to Firestore (Primary Backup)
+    const orderId = `ORD-${Date.now()}`;
+    const newOrder: Order = {
+      id: orderId,
+      items: [{ ...product, quantity: formData.quantity, selectedSize: formData.size, selectedColor: formData.color }],
+      total: grandTotal,
+      customer: {
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+      },
+      paymentMethod: 'cod',
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      const { db } = await import('../lib/firebase');
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
       
-      // Add to local orders for history/analytics
-      const orderId = `ORD-${Date.now()}`;
-      const newOrder: Order = {
-        id: orderId,
-        items: [{ ...product, quantity: formData.quantity, selectedSize: formData.size, selectedColor: formData.color }],
-        total: grandTotal,
-        customer: {
-          name: formData.name,
-          phone: formData.phone,
-          address: formData.address,
-        },
-        paymentMethod: 'cod',
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
+      await addDoc(collection(db, 'orders'), {
+        ...newOrder,
+        serverTimestamp: serverTimestamp()
+      });
+      
+      // 2. Add to local state
       addOrder(newOrder);
 
-      setIsSubmitting(false);
-      setShowSuccess(true);
-    }, 1000);
+      // 3. Handle WhatsApp Redirect (Delayed for better UX transition)
+      setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+        setIsSubmitting(false);
+        setShowSuccess(true);
+      }, 800);
+
+    } catch (error) {
+      console.error("Order Backup Failed:", error);
+      // Still allow the order to proceed via local state and WhatsApp even if Firestore fails
+      addOrder(newOrder);
+      setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+        setIsSubmitting(false);
+        setShowSuccess(true);
+      }, 800);
+    }
   };
 
   const handleClose = () => {
@@ -203,7 +224,7 @@ const CheckoutDrawer: React.FC = () => {
                   <div className="flex gap-4 p-5 bg-[#1a1a1a] rounded-2xl mb-8 shadow-xl border border-gray-800">
                     <div className="relative">
                         <img 
-                        src={product.image} 
+                        src={product.image || undefined} 
                         alt={product.name} 
                         className="w-20 h-20 object-cover rounded-xl shadow-lg border border-gray-700"
                         />

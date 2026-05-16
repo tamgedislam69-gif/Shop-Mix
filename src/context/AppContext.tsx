@@ -226,16 +226,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         root.style.setProperty('--prod-img-fit', c.layout.productImageFit || 'cover');
       }
 
-      // Dark Mode
+      // Dark Mode & Theme Colors
       if (c.darkMode) {
         document.body.classList.add('dark');
-        root.style.setProperty('--bg-color', c.colors.background || '#111827');
-        root.style.setProperty('--text-main', c.colors.textMain || '#F3F4F6');
-        root.style.setProperty('--text-headings', c.colors.textHeadings || '#FFFFFF');
-        root.style.setProperty('--card-bg', c.colors.cardBg || '#1F2937');
-        root.style.setProperty('--card-border', c.colors.cardBorder || '#374151');
       } else {
         document.body.classList.remove('dark');
+      }
+
+      const colors = c.colors || {};
+      root.style.setProperty('--bg-color', colors.background || (c.darkMode ? '#111827' : '#FFFFFF'));
+      root.style.setProperty('--text-main', colors.textMain || (c.darkMode ? '#F3F4F6' : '#333333'));
+      root.style.setProperty('--text-headings', colors.textHeadings || (c.darkMode ? '#FFFFFF' : '#111111'));
+      root.style.setProperty('--card-bg', colors.cardBg || (c.darkMode ? '#1F2937' : '#FFFFFF'));
+      root.style.setProperty('--card-border', colors.cardBorder || (c.darkMode ? '#374151' : '#EEEEEE'));
+      root.style.setProperty('--header-bg', colors.headerBg || (c.darkMode ? '#111111' : '#FFFFFF'));
+      root.style.setProperty('--header-text', colors.headerText || (c.darkMode ? '#FFFFFF' : '#111111'));
+      
+      if (c.fonts) {
+        root.style.setProperty('--heading-font', c.fonts.heading || 'Poppins');
+        root.style.setProperty('--body-font', c.fonts.body || 'Inter');
+      }
+
+      // Custom HTML Injection
+      const existingContainer = document.getElementById('custom-site-html');
+      if (existingContainer) existingContainer.remove();
+      
+      if (c.advanced?.customHtml) {
+        const container = document.createElement('div');
+        container.id = 'custom-site-html';
+        container.innerHTML = c.advanced.customHtml;
+        document.body.appendChild(container);
+        
+        // Handle scripts inside custom HTML
+        const scripts = container.getElementsByTagName('script');
+        Array.from(scripts).forEach(oldScript => {
+          const newScript = document.createElement('script');
+          Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+          newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+          oldScript.parentNode?.replaceChild(newScript, oldScript);
+        });
       }
 
       // Custom CSS

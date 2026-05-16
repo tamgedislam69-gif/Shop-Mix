@@ -227,8 +227,10 @@ export const INITIAL_SETTINGS: SiteSettings = {
       soldOutThreshold: 0
     },
     advanced: {
-      customCss: ''
-    }
+      customCss: '',
+      customHtml: ''
+    },
+    theme: 'default'
   },
   security: {
     adminEmail: 'tamgedislam69@gmail.com',
@@ -269,3 +271,63 @@ export const INITIAL_POSTS: Post[] = [
 ];
 
 export const CATEGORIES = ['Electronics', 'Fashion', 'Home', 'Beauty', 'Toys'];
+
+export const THEME_PRESETS = {
+  'luxury-dark': {
+    colors: {
+      primary: '#D4AF37', // Gold
+      secondary: '#000000',
+      accent: '#D4AF37',
+      background: '#0A0A0A',
+      textMain: '#E5E5E5',
+      textHeadings: '#FFFFFF',
+      headerBg: '#000000',
+      headerText: '#FFFFFF',
+      cardBg: '#1A1A1A',
+      cardBorder: '#333333',
+      priceColor: '#D4AF37'
+    },
+    fonts: {
+      heading: 'Playfair Display',
+      body: 'Inter'
+    }
+  },
+  'minimal-white': {
+    colors: {
+      primary: '#111111',
+      secondary: '#F5F5F5',
+      accent: '#333333',
+      background: '#FFFFFF',
+      textMain: '#333333',
+      textHeadings: '#111111',
+      headerBg: '#FFFFFF',
+      headerText: '#111111',
+      cardBg: '#FFFFFF',
+      cardBorder: '#EEEEEE',
+      priceColor: '#111111'
+    },
+    fonts: {
+      heading: 'Montserrat',
+      body: 'Open Sans'
+    }
+  },
+  'festive': {
+    colors: {
+      primary: '#D62828', // Festive Red
+      secondary: '#003049',
+      accent: '#F77F00',
+      background: '#FCF7F7',
+      textMain: '#333333',
+      textHeadings: '#D62828',
+      headerBg: '#D62828',
+      headerText: '#FFFFFF',
+      cardBg: '#FFFFFF',
+      cardBorder: '#FED9D9',
+      priceColor: '#D62828'
+    },
+    fonts: {
+      heading: 'Poppins',
+      body: 'Nunito'
+    }
+  }
+};

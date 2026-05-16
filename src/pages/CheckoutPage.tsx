@@ -293,7 +293,7 @@ const CheckoutPage: React.FC = () => {
                          <div key={item.id} className="flex gap-4">
                              <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100">
                                  <img 
-                                src={item.image} 
+                                src={item.image || undefined} 
                                 className="w-full h-full object-cover" 
                                 referrerPolicy="no-referrer" 
                                 loading="lazy"

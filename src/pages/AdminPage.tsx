@@ -38,6 +38,8 @@ import {
   Monitor,
   Smartphone,
   MousePointer2,
+  Upload,
+  Loader2,
   Type as TypeIcon
 } from 'lucide-react';
 import { CATEGORIES, INITIAL_SETTINGS } from '../constants';
@@ -71,10 +73,39 @@ const COLOR_PRESETS = [
   { name: 'Gray', hex: '#808080', emoji: '🩶' },
 ];
 
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../lib/firebase';
+
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { products, setProducts, settings, updateSettings, orders, setOrders, analytics, logout } = useApp();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'settings' | 'orders' | 'media' | 'posts' | 'customization'>('dashboard');
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'image' | 'video') => {
+    const file = e.target.files?.[0];
+    if (!file || !editingProduct) return;
+
+    setIsUploading(true);
+    try {
+      const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      
+      if (target === 'image') {
+        setEditingProduct({ ...editingProduct, image: url });
+      } else {
+        setEditingProduct({ ...editingProduct, videoUrl: url });
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const generateInvoice = (order: Order) => {
     const doc = new jsPDF();
@@ -157,7 +188,7 @@ const AdminPage: React.FC = () => {
         audio.play().catch(e => console.log('Audio play blocked'));
     }
   }, [orders.length]);
-  const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+  
   const [tempSettings, setTempSettings] = useState<SiteSettings>(settings);
 
   // --- Product Handlers ---
@@ -790,7 +821,7 @@ const AdminPage: React.FC = () => {
                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                  {topProducts.map(p => (
                                      <div key={p.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                         <img src={p.image} className="w-12 h-12 rounded-lg object-cover" />
+                                         <img src={p.image || undefined} className="w-12 h-12 rounded-lg object-cover" />
                                          <div className="flex-grow">
                                              <p className="text-xs font-bold line-clamp-1">{p.name}</p>
                                              <p className="text-[10px] text-gray-400 font-bold uppercase">{p.views || 0} views</p>
@@ -860,7 +891,7 @@ const AdminPage: React.FC = () => {
                                         <tr key={p.id} className="group hover:bg-gray-50/50 transition-colors">
                                             <td className="px-4 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <img src={p.image} className="w-10 h-10 rounded object-cover bg-gray-100" referrerPolicy="no-referrer" />
+                                                    <img src={p.image || undefined} className="w-10 h-10 rounded object-cover bg-gray-100" referrerPolicy="no-referrer" />
                                                     <span className="font-bold text-sm text-gray-800 line-clamp-1">{p.name}</span>
                                                 </div>
                                             </td>
@@ -1346,7 +1377,7 @@ const AdminPage: React.FC = () => {
 
                                         <div className="space-y-1 md:col-span-2">
                                             <div className="flex justify-between items-center px-1 mb-1">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">High-Res Media URL (Image/Portrait Video)</label>
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Product Media Assets</label>
                                                 <button 
                                                     type="button"
                                                     onClick={() => setActiveTab('media')}
@@ -1355,35 +1386,83 @@ const AdminPage: React.FC = () => {
                                                     Open Media Library
                                                 </button>
                                             </div>
-                                            <div className="flex flex-col sm:flex-row gap-4">
-                                                <div className="flex-1 space-y-1">
-                                                    <label className="text-[9px] font-bold text-gray-300 uppercase pl-1">Main Cover Image URL</label>
-                                                    <div className="relative">
-                                                        <input 
-                                                            required
-                                                            className="w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all shadow-sm font-mono text-xs"
-                                                            value={editingProduct.image}
-                                                            placeholder="https://example.com/image.jpg"
-                                                            onChange={e => setEditingProduct({...editingProduct, image: e.target.value})}
-                                                        />
-                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
-                                                            <ImageIcon size={18} />
-                                                        </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                <div className="space-y-4">
+                                                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest pl-1">Main Cover Image</label>
+                                                    <div 
+                                                      onClick={() => fileInputRef.current?.click()}
+                                                      className="w-full h-40 border-2 border-dashed border-gray-200 rounded-[2.5rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden"
+                                                    >
+                                                        {editingProduct.image ? (
+                                                            <>
+                                                                <img src={editingProduct.image || undefined} className="w-full h-full object-cover" />
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                    <Upload className="text-white" size={24} />
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                                                                    <Upload size={18} />
+                                                                </div>
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-orange-500">Upload Image</span>
+                                                            </>
+                                                        )}
+                                                        {isUploading && (
+                                                            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                                                                <Loader2 className="animate-spin text-orange-500" size={24} />
+                                                            </div>
+                                                        )}
                                                     </div>
+                                                    <input 
+                                                      type="file"
+                                                      ref={fileInputRef}
+                                                      className="hidden"
+                                                      accept="image/*"
+                                                      onChange={(e) => handleFileUpload(e, 'image')}
+                                                    />
+                                                    <input 
+                                                      className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 text-[10px] font-mono focus:ring-2 focus:ring-orange-500/20 outline-none"
+                                                      value={editingProduct.image}
+                                                      onChange={e => setEditingProduct({...editingProduct, image: e.target.value})}
+                                                      placeholder="Or paste URL here..."
+                                                    />
                                                 </div>
-                                                <div className="flex-1 space-y-1">
-                                                     <label className="text-[9px] font-bold text-gray-300 uppercase pl-1">Cinematic Video URL (mp4)</label>
-                                                     <div className="relative">
-                                                        <input 
-                                                            className="w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all shadow-sm font-mono text-xs"
-                                                            value={editingProduct.videoUrl || ''}
-                                                            placeholder="https://example.com/video.mp4"
-                                                            onChange={e => setEditingProduct({...editingProduct, videoUrl: e.target.value})}
-                                                        />
-                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
-                                                            <Video size={18} />
-                                                        </div>
+
+                                                <div className="space-y-4">
+                                                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest pl-1">Cinematic Video (Optional)</label>
+                                                    <div 
+                                                      onClick={() => {
+                                                        const input = document.createElement('input');
+                                                        input.type = 'file';
+                                                        input.accept = 'video/*';
+                                                        input.onchange = (e: any) => handleFileUpload(e, 'video');
+                                                        input.click();
+                                                      }}
+                                                      className="w-full h-40 border-2 border-dashed border-gray-200 rounded-[2.5rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden"
+                                                    >
+                                                        {editingProduct.videoUrl ? (
+                                                            <>
+                                                                <video src={editingProduct.videoUrl || undefined} className="w-full h-full object-cover" muted />
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                    <Video className="text-white" size={24} />
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                                                                    <Video size={18} />
+                                                                </div>
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-orange-500">Upload Video</span>
+                                                            </>
+                                                        )}
                                                     </div>
+                                                    <input 
+                                                      className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 text-[10px] font-mono focus:ring-2 focus:ring-orange-500/20 outline-none"
+                                                      value={editingProduct.videoUrl || ''}
+                                                      onChange={e => setEditingProduct({...editingProduct, videoUrl: e.target.value})}
+                                                      placeholder="Or paste URL here..."
+                                                    />
                                                 </div>
                                             </div>
                                         </div>

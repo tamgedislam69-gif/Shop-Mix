@@ -50,7 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       >
         {product.videoUrl ? (
           <video 
-            src={product.videoUrl} 
+            src={product.videoUrl || undefined} 
             autoPlay 
             muted 
             loop 
@@ -60,7 +60,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           />
         ) : (
           <img 
-            src={product.image} 
+            src={product.image || undefined} 
             alt={product.name} 
             className="w-full h-full transition-transform duration-500"
             style={{ 

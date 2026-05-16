@@ -80,7 +80,7 @@ const CartPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
                   <div className="col-span-3 flex gap-4 items-center">
                     <img 
-                      src={item.image} 
+                      src={item.image || undefined} 
                       alt={item.name} 
                       className="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover bg-gray-50 flex-shrink-0" 
                       referrerPolicy="no-referrer"

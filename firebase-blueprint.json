@@ -11,12 +11,37 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of submission" }
       },
       "required": ["name", "phone", "message", "createdAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order details",
+      "type": "object",
+      "properties": {
+        "customer": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "phone": { "type": "string" },
+            "address": { "type": "string" }
+          },
+          "required": ["name", "phone", "address"]
+        },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customer", "items", "total", "status", "createdAt"]
     }
   },
   "firestore": {
     "complaints/{complaintId}": {
       "schema": "Complaint",
       "description": "Publicly submittable complaints."
+    },
+    "orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer orders."
     }
   }
 }
