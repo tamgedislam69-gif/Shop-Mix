@@ -1,0 +1,22 @@
+{
+  "entities": {
+    "Complaint": {
+      "title": "Complaint",
+      "description": "User submitted complaints from the footer box.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the complainant" },
+        "phone": { "type": "string", "description": "Phone number of the complainant" },
+        "message": { "type": "string", "description": "The complaint message" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of submission" }
+      },
+      "required": ["name", "phone", "message", "createdAt"]
+    }
+  },
+  "firestore": {
+    "complaints/{complaintId}": {
+      "schema": "Complaint",
+      "description": "Publicly submittable complaints."
+    }
+  }
+}

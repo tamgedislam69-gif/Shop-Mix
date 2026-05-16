@@ -24,6 +24,8 @@ import BackToTop from './components/BackToTop';
 import PromoPopup from './components/PromoPopup';
 import Preloader from './components/Preloader';
 import FloatingCart from './components/FloatingCart';
+import CheckoutDrawer from './components/CheckoutDrawer';
+import { AdminProcessSettings } from './components/AdminProcessSettings';
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin } = useApp();
@@ -62,6 +64,8 @@ function AppRoutes() {
       <PromoPopup />
       <Preloader />
       <FloatingCart />
+      <CheckoutDrawer />
+      <AdminProcessSettings />
     </div>
   );
 }

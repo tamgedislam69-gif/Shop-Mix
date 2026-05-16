@@ -1,118 +1,271 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X, LogOut, Heart, SearchCheck } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, LogOut, Heart, Settings } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { useTranslate } from '../hooks/useTranslate';
 
 const Header: React.FC = () => {
-  const { cart, settings, isAdmin, logout } = useApp();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const { 
+    cart, 
+    settings, 
+    isAdmin, 
+    logout, 
+    searchQuery, 
+    setSearchQuery, 
+    setIsSettingsOpen, 
+    isMenuOpen, 
+    setIsMenuOpen 
+  } = useApp();
+  
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState('');
   const navigate = useNavigate();
+  const { t } = useTranslate();
+
+  const handlePinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const storedPin = localStorage.getItem('drawer_pin') || '112233';
+    if (pinInput === storedPin) {
+      setIsMenuOpen(true);
+      setShowPinModal(false);
+      setPinInput('');
+    } else {
+      alert('ভুল পিন কোড! (Wrong PIN!)');
+    }
+  };
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const v = settings.customization?.visibility;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would filter products or navigate to search page
-    console.log('Searching for:', searchQuery);
+    navigate('/');
+    setIsMobileSearchOpen(false);
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b border-gray-100">
+    <header 
+      className="fixed top-0 left-0 right-0 z-50 shadow-sm border-b"
+      style={{ 
+        backgroundColor: settings.customization?.colors?.headerBg || 'white',
+        borderColor: settings.customization?.colors?.cardBorder || '#f1f1f1',
+        height: `${settings.customization?.layout?.headerHeight || 80}px`
+      }}
+    >
+      {/* PIN Modal Overlay */}
+      <AnimatePresence>
+        {showPinModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPinModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white w-full max-w-sm rounded-[2rem] p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-gray-100 overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-black" />
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                  <Settings className="w-8 h-8 text-black opacity-20" />
+                </div>
+                <h3 className="text-2xl font-black uppercase tracking-tighter mb-1">পাসওয়ার্ড দিন</h3>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Security Authorization Required</p>
+              </div>
+              
+              <form onSubmit={handlePinSubmit} className="space-y-6">
+                <div className="relative">
+                  <input 
+                    type="password"
+                    value={pinInput}
+                    onChange={(e) => setPinInput(e.target.value)}
+                    placeholder="••••••"
+                    autoFocus
+                    className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-5 px-6 text-center text-3xl font-black tracking-[12px] focus:ring-0 focus:border-black outline-none transition-all"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setShowPinModal(false)}
+                    className="flex-1 py-4 bg-gray-50 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all border border-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex-[2] py-4 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-[2px] hover:shadow-xl active:scale-95 transition-all"
+                  >
+                    Authorize
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       {/* Top Bar */}
       <div className="bg-gray-100 hidden md:block border-b border-gray-200/50">
-        <div className="container mx-auto px-4 py-1 flex justify-between text-xs text-gray-600">
+        <div className="container mx-auto px-4 py-1 flex justify-between text-[10px] uppercase font-black tracking-widest text-gray-500">
           <div className="flex gap-4">
-            <Link to="/track-order" className="hover:text-primary transition-colors">Track Order</Link>
-            <span>Customer Care</span>
+            <Link to="/track-order" className="hover:text-primary transition-colors">{t('অর্ডার ট্র্যাক করুন', 'Track Order')}</Link>
+            <span>{t('কাস্টমার কেয়ার', 'Customer Care')}</span>
           </div>
           <div className="flex gap-4">
              {isAdmin ? (
                <div className="flex gap-4">
                  <Link to="/secret-admin-access" className="hover:text-primary font-bold">Panel</Link>
+                 <button 
+                   onClick={() => setIsSettingsOpen(true)}
+                   className="hover:text-primary flex items-center gap-1 font-bold"
+                 >
+                   <Settings size={12} /> Settings
+                 </button>
                  <button onClick={() => { logout(); navigate('/'); }} className="hover:text-primary flex items-center gap-1">
                    <LogOut size={12} /> Logout
                  </button>
                </div>
              ) : (
-               <Link to="/login" className="hover:text-primary">Admin Access</Link>
+               <Link to="/login" className="hover:text-primary">{t('অ্যাডমিন অ্যাক্সেস', 'Admin Access')}</Link>
              )}
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-3 md:py-4 flex items-center justify-between gap-4">
+      <div className="container mx-auto px-4 h-full flex items-center justify-between gap-4">
         {/* Mobile Menu Toggle */}
         <button 
-          className="md:hidden p-2 -ml-2 text-gray-600"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="md:hidden p-2 -ml-2 transition-colors relative z-[51]"
+          style={{ color: settings.customization?.colors?.headerText || '#111827' }}
+          onClick={() => {
+            if (isMenuOpen) {
+              setIsMenuOpen(false);
+              return;
+            }
+            const isPinEnabled = localStorage.getItem('is_drawer_pin_enabled') !== 'false';
+            if (isPinEnabled) {
+              setShowPinModal(true);
+            } else {
+              setIsMenuOpen(true);
+            }
+          }}
         >
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
         {/* Logo */}
         <Link to="/" className="flex-shrink-0">
-          <h1 className="text-xl md:text-2xl font-bold tracking-tighter" style={{ color: settings.primaryColor }}>
-            {settings.logoText} <span className="text-gray-800">Online</span>
+          <h1 
+            className="text-xl md:text-2xl font-black tracking-tighter" 
+            style={{ color: settings.customization?.colors?.primary || settings.primaryColor }}
+          >
+            {settings.customization?.text?.websiteName || settings.logoText}
           </h1>
         </Link>
 
         {/* Search Bar */}
-        <form 
-          onSubmit={handleSearch}
-          className="hidden md:flex flex-grow max-w-2xl relative"
-        >
-          <input
-            type="text"
-            placeholder="Search in Shop Mix..."
-            className="w-full bg-gray-100 border-none rounded-md py-2 px-4 focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button 
-            type="submit"
-            className="absolute right-0 top-0 h-full px-4 rounded-r-md text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: settings.primaryColor }}
+        {v?.searchBar !== false && (
+          <form 
+            onSubmit={handleSearch}
+            className="hidden md:flex flex-grow max-w-2xl relative"
           >
-            <Search size={20} />
-          </button>
-        </form>
+            <input
+              type="text"
+              placeholder={t('Shop Mix এ খুঁজুন...', 'Search in Shop Mix...')}
+              className="w-full bg-gray-100 border-none rounded-md py-2 px-4 focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-sm font-medium"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button 
+              type="submit"
+              className="absolute right-0 top-0 h-full px-4 rounded-r-md text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: settings.customization?.colors?.primary || settings.primaryColor }}
+            >
+              <Search size={20} />
+            </button>
+          </form>
+        )}
 
         {/* Icons */}
         <div className="flex items-center gap-3 md:gap-6">
-          <Link to="/wishlist" className="hidden md:flex flex-col items-center text-gray-600 hover:text-primary transition-colors">
-            <Heart size={24} />
-            <span className="text-[10px] font-medium uppercase mt-1">Wishlist</span>
-          </Link>
+          {v?.wishlistBtn !== false && (
+            <Link to="/wishlist" className="hidden md:flex flex-col items-center hover:text-primary transition-colors" style={{ color: settings.customization?.colors?.headerText || '#374151' }}>
+              <Heart size={24} />
+              <span className="text-[10px] font-black uppercase mt-1 tracking-widest">{t('উইশলিস্ট', 'Wishlist')}</span>
+            </Link>
+          )}
           {isAdmin && (
-            <Link to="/secret-admin-access" className="hidden md:flex flex-col items-center text-gray-600 hover:text-primary transition-colors">
+            <Link to="/secret-admin-access" className="hidden md:flex flex-col items-center hover:text-primary transition-colors" style={{ color: settings.customization?.colors?.headerText || '#374151' }}>
               <User size={24} />
-              <span className="text-[10px] font-medium uppercase mt-1">Dashboard</span>
+              <span className="text-[10px] font-black uppercase mt-1 tracking-widest">{t('ড্যাশবোর্ড', 'Dashboard')}</span>
             </Link>
           )}
           <Link to="/cart" className="relative group p-2">
-            <ShoppingCart size={24} className="text-gray-700 group-hover:text-primary transition-colors" />
+            <ShoppingCart size={24} className="group-hover:text-primary transition-colors" style={{ color: settings.customization?.colors?.cartIcon || settings.customization?.colors?.headerText || '#374151' }} />
             <AnimatePresence>
               {cartCount > 0 && (
                 <motion.span 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
-                  className="absolute top-0 right-0 h-5 w-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white"
-                  style={{ backgroundColor: settings.primaryColor }}
+                  className="absolute top-0 right-0 h-5 w-5 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white"
+                  style={{ backgroundColor: settings.customization?.colors?.primary || settings.primaryColor }}
                 >
                   {cartCount}
                 </motion.span>
               )}
             </AnimatePresence>
           </Link>
-          <button className="md:hidden text-gray-700">
-             <Search size={24} />
-          </button>
+          {v?.searchBar !== false && (
+            <button 
+              className="md:hidden"
+              style={{ color: settings.customization?.colors?.headerText || '#111827' }}
+              onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+            >
+               <Search size={24} />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Mobile Search Overlay */}
+      <AnimatePresence>
+        {isMobileSearchOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
+          >
+            <div className="container mx-auto px-4 py-3">
+              <form onSubmit={handleSearch} className="relative">
+                <input
+                  type="text"
+                  placeholder={t('Shop Mix এ খুঁজুন...', 'Search in Shop Mix...')}
+                  className="w-full bg-gray-100 border-none rounded-md py-3 px-4 pr-12 focus:ring-2 focus:ring-primary outline-none font-bold"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+                <button 
+                  type="submit"
+                  className="absolute right-0 top-0 h-full px-4 text-gray-400 hover:text-primary transition-colors"
+                >
+                  <Search size={20} />
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile Menu Navigation */}
       <AnimatePresence>
@@ -133,19 +286,27 @@ const Header: React.FC = () => {
               className="fixed top-0 left-0 bottom-0 w-[280px] bg-white z-50 p-6 md:hidden overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-8">
-                <h1 className="text-xl font-bold" style={{ color: settings.primaryColor }}>{settings.logoText}</h1>
+                <h1 className="text-xl font-black uppercase tracking-tight" style={{ color: settings.customization?.colors?.primary || settings.primaryColor }}>
+                  {settings.customization?.text?.websiteName || settings.logoText}
+                </h1>
                 <button onClick={() => setIsMenuOpen(false)}><X size={24} /></button>
               </div>
 
               <div className="space-y-6">
-                <nav className="flex flex-col gap-4 text-lg font-medium">
-                  <Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
-                  <Link to="/wishlist" onClick={() => setIsMenuOpen(false)}>Wishlist</Link>
-                  <Link to="/track-order" onClick={() => setIsMenuOpen(false)}>Track Order</Link>
-                  <Link to="/cart" onClick={() => setIsMenuOpen(false)}>My Cart</Link>
+                <nav className="flex flex-col gap-4 text-xs font-black uppercase tracking-widest">
+                  <Link to="/" onClick={() => setIsMenuOpen(false)}>{t('হোম', 'Home')}</Link>
+                  {v?.wishlistBtn !== false && <Link to="/wishlist" onClick={() => setIsMenuOpen(false)}>{t('উইশলিস্ট', 'Wishlist')}</Link>}
+                  <Link to="/track-order" onClick={() => setIsMenuOpen(false)}>{t('অর্ডার ট্র্যাক করুন', 'Track Order')}</Link>
+                  <Link to="/cart" onClick={() => setIsMenuOpen(false)}>{t('আমার কার্ট', 'My Cart')}</Link>
                   {isAdmin ? (
                     <>
                       <Link to="/secret-admin-access" onClick={() => setIsMenuOpen(false)}>Admin Dashboard</Link>
+                      <button 
+                        onClick={() => { setIsSettingsOpen(true); setIsMenuOpen(false); }}
+                        className="text-left flex items-center gap-2 hover:text-primary transition-colors"
+                      >
+                         <Settings size={16} /> All Process Settings
+                      </button>
                       <button 
                         className="text-left py-2 text-red-500 font-bold"
                         onClick={() => { logout(); setIsMenuOpen(false); navigate('/'); }}
@@ -154,12 +315,12 @@ const Header: React.FC = () => {
                       </button>
                     </>
                   ) : (
-                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>Admin Login</Link>
+                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>{t('লগইন', 'Admin Login')}</Link>
                   )}
                 </nav>
                 
-                <div className="pt-6 border-top border-gray-100 text-sm text-gray-500">
-                  <p>Contact Us</p>
+                <div className="pt-6 border-top border-gray-100 text-xs text-gray-500 font-bold uppercase tracking-widest">
+                  <p>{t('যোগাযোগ করুন', 'Contact Us')}</p>
                   <p>+880 1234567890</p>
                 </div>
               </div>

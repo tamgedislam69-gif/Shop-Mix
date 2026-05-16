@@ -16,6 +16,7 @@ export interface ProductVariant {
   id: string;
   name: string;
   priceModifier: number;
+  hex?: string;
 }
 
 export interface Product {
@@ -29,11 +30,30 @@ export interface Product {
   rating: number;
   reviews: ProductReview[];
   stock: number;
+  videoUrl?: string;
+  source: 'alibaba' | 'own';
   variants?: {
     colors: ProductVariant[];
     sizes: ProductVariant[];
   };
   views: number;
+  affiliateLink?: string;
+  isOwnInventory?: boolean;
+  enableSizes?: boolean;
+  enableColors?: boolean;
+}
+
+export interface Division {
+  id: string;
+  name: string;
+  bnName: string;
+}
+
+export interface District {
+  id: string;
+  divisionId: string;
+  name: string;
+  bnName: string;
 }
 
 export interface SiteAnalytics {
@@ -44,6 +64,8 @@ export interface SiteAnalytics {
 
 export interface CartItem extends Product {
   quantity: number;
+  selectedColor?: string;
+  selectedSize?: string;
 }
 
 export interface ButtonConfig {
@@ -74,6 +96,118 @@ export interface Post {
   status: 'published' | 'draft';
 }
 
+export interface CustomizationSettings {
+  language: 'bn' | 'en' | 'mixed';
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    textMain: string;
+    textHeadings: string;
+    headerBg: string;
+    headerText: string;
+    footerBg: string;
+    footerText: string;
+    btnPrimaryBg: string;
+    btnSecondaryBg: string;
+    btnText: string;
+    cardBg: string;
+    cardBorder: string;
+    priceColor: string;
+    discountBadge: string;
+    timerBg: string;
+    timerText: string;
+    categoryTabBg: string;
+    categoryTabActiveBg: string;
+    cartIcon: string;
+    whatsappBtn: string;
+  };
+  fonts: {
+    heading: string;
+    body: string;
+    button: string;
+    price: string;
+    sizes: {
+      heading1: number;
+      heading2: number;
+      heading3: number;
+      body: number;
+      button: number;
+      price: number;
+      menu: number;
+      productTitle: number;
+    };
+    weights: {
+      heading: string;
+      body: string;
+    };
+    lineHeight: number;
+    letterSpacing: number;
+  };
+  visibility: {
+    heroBanner: boolean;
+    shopCollectionBtn: boolean;
+    learnMoreBtn: boolean;
+    categoryTabs: boolean;
+    flashSaleTimer: boolean;
+    flashSaleSection: boolean;
+    discountBadges: boolean;
+    stockInfo: boolean;
+    starRatings: boolean;
+    wishlistBtn: boolean;
+    shareBtn: boolean;
+    whatsappFloat: boolean;
+    cartFloat: boolean;
+    searchBar: boolean;
+    footer: boolean;
+    newsletter: boolean;
+    socialLinks: boolean;
+  };
+  layout: {
+    productCardSize: 'sm' | 'md' | 'lg';
+    imageHeight: number;
+    productSpacing: number;
+    containerPadding: number;
+    borderRadius: number;
+    buttonSize: 'sm' | 'md' | 'lg';
+    buttonRadius: number;
+    headerHeight: number;
+    footerHeight: number;
+    gridColumns: number;
+    heroHeight: number;
+    heroPadding: number;
+    cardGap: number;
+    productImageHeight: number;
+    productImageAspectRatio: string;
+    productImageFit: 'cover' | 'contain';
+  };
+  carousel?: {
+    urls: string[];
+    duration: number;
+    isEnabled: boolean;
+  };
+  darkMode?: boolean;
+  text: {
+    websiteName: string;
+    heroTitle: string;
+    shopCollectionBtn: string;
+    learnMoreBtn: string;
+    flashSaleTitle: string;
+    flashSaleEnded: string;
+    categories: { [key: string]: string };
+    confirmOrderBtn: string;
+  };
+  productPosting?: {
+    defaultDescription: string;
+    autoAddToCart: boolean;
+    soldOutThreshold: number;
+  };
+  advanced?: {
+    customCss: string;
+  };
+}
+
 export interface SiteSettings {
   primaryColor: string;
   logoText: string;
@@ -82,6 +216,19 @@ export interface SiteSettings {
   heroSubtext: string;
   buyButton: ButtonConfig;
   addToCartButton: ButtonConfig;
+  flashSale?: {
+    isEnabled: boolean;
+    startTime: string;
+    endTime: string;
+    endMessage: string;
+    autoRestart?: boolean;
+    durationSeconds?: number;
+  };
+  customization?: CustomizationSettings;
+  security?: {
+    adminEmail: string;
+    adminPassword?: string;
+  };
 }
 
 export interface Order {

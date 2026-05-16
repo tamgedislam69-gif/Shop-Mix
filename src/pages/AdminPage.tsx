@@ -18,15 +18,29 @@ import {
   DollarSign,
   TrendingUp,
   ShoppingCart,
-  Users,
   Image as ImageIcon,
+  Video,
+  ExternalLink,
+  Users,
   FileText,
   Download,
   Printer,
   ChevronRight,
-  LogOut
+  LogOut,
+  Clock,
+  Calendar,
+  Zap,
+  Languages,
+  EyeOff,
+  Maximize2,
+  Lock,
+  Globe,
+  Monitor,
+  Smartphone,
+  MousePointer2,
+  Type as TypeIcon
 } from 'lucide-react';
-import { CATEGORIES } from '../constants';
+import { CATEGORIES, INITIAL_SETTINGS } from '../constants';
 import { Product, SiteSettings, Order } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatPrice, cn } from '../lib/utils';
@@ -42,10 +56,25 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+const SHOE_SIZES = ['38', '39', '40', '41', '42', '43', '44'];
+const COLOR_PRESETS = [
+  { name: 'Red', hex: '#FF0000', emoji: '🔴' },
+  { name: 'Black', hex: '#000000', emoji: '⚫' },
+  { name: 'White', hex: '#FFFFFF', emoji: '⚪' },
+  { name: 'Blue', hex: '#0000FF', emoji: '🔵' },
+  { name: 'Green', hex: '#008000', emoji: '🟢' },
+  { name: 'Yellow', hex: '#FFFF00', emoji: '🟡' },
+  { name: 'Orange', hex: '#FF6B00', emoji: '🟠' },
+  { name: 'Purple', hex: '#800080', emoji: '🟣' },
+  { name: 'Brown', hex: '#A52A2A', emoji: '🟤' },
+  { name: 'Gray', hex: '#808080', emoji: '🩶' },
+];
+
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
-  const { products, setProducts, settings, updateSettings, orders, analytics, logout } = useApp();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'settings' | 'orders' | 'media' | 'posts'>('dashboard');
+  const { products, setProducts, settings, updateSettings, orders, setOrders, analytics, logout } = useApp();
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'settings' | 'orders' | 'media' | 'posts' | 'customization'>('dashboard');
 
   const generateInvoice = (order: Order) => {
     const doc = new jsPDF();
@@ -144,7 +173,10 @@ const AdminPage: React.FC = () => {
         id: Math.random().toString(36).substr(2, 9),
         reviews: editingProduct.reviews || [],
         views: editingProduct.views || 0,
-        rating: editingProduct.rating || 4.5
+        rating: editingProduct.rating || 4.5,
+        videoUrl: editingProduct.videoUrl || '',
+        category: editingProduct.category || 'Electronics',
+        source: editingProduct.source || 'own'
       } as Product;
       setProducts(prev => [...prev, newProduct]);
     }
@@ -164,8 +196,10 @@ const AdminPage: React.FC = () => {
   };
 
   const resetSettings = () => {
-    if (window.confirm('Reset to default settings?')) {
-        // Logic to reset would go here
+    if (window.confirm('Reset to default settings? This will revert all customizations.')) {
+        updateSettings(INITIAL_SETTINGS);
+        setTempSettings(INITIAL_SETTINGS);
+        alert('All settings reset to default!');
     }
   };
 
@@ -225,7 +259,17 @@ const AdminPage: React.FC = () => {
                   )}
                   style={activeTab === 'settings' ? { backgroundColor: '#1f2937' } : {}}
                 >
-                    <Settings size={18} /> Site Styling
+                    <Settings size={18} /> Basic Engine
+                </button>
+                <button 
+                  onClick={() => setActiveTab('customization')}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all text-sm uppercase tracking-wider",
+                    activeTab === 'customization' ? "bg-primary text-white shadow-lg" : "text-gray-500 hover:bg-gray-100"
+                  )}
+                  style={activeTab === 'customization' ? { backgroundColor: settings.primaryColor } : {}}
+                >
+                    <Palette size={18} /> Customization
                 </button>
                 <button 
                   onClick={() => setActiveTab('orders')}
@@ -292,7 +336,420 @@ const AdminPage: React.FC = () => {
                   </motion.div>
                 )}
                 
-                {/* SETTINGS TAB ... */}
+                {/* CUSTOMIZATION TAB */}
+                {activeTab === 'customization' && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    key="customization"
+                    className="space-y-12 pb-20"
+                  >
+                    <div className="border-b border-gray-100 pb-4">
+                      <h2 className="text-2xl font-black uppercase tracking-tight">🎨 Website Customization</h2>
+                      <p className="text-gray-400 text-sm">ওয়েবসাইট কাস্টমাইজেশন - Real-time Style & Content Management</p>
+                    </div>
+
+                    {/* Language Settings */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2">
+                        <Type className="text-orange-500" size={20} />
+                        <h3 className="font-black uppercase tracking-widest text-sm">🌐 Language Settings (ভাষা সেটিংস)</h3>
+                      </div>
+                      <div className="bg-gray-50 p-6 rounded-2xl space-y-4">
+                        <div className="flex items-center gap-4">
+                          <select 
+                            className="bg-white border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-sm"
+                            value={tempSettings.customization?.language || 'bn'}
+                            onChange={(e) => setTempSettings({
+                              ...tempSettings,
+                              customization: {
+                                ...tempSettings.customization!,
+                                language: e.target.value as any
+                              }
+                            })}
+                          >
+                            <option value="bn">🇧🇩 Bengali (বাংলা)</option>
+                            <option value="en">🇬🇧 English</option>
+                            <option value="mixed">Mixed (মিশ্র)</option>
+                          </select>
+                          <button 
+                            onClick={handleSaveSettings}
+                            className="bg-gray-900 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-orange-500 transition-colors"
+                          >
+                            Save Language
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-400 italic">Changing language will instantly update headings, menu labels, and product details across the store.</p>
+                      </div>
+                    </div>
+
+                    {/* Color Customization */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2">
+                          <Palette className="text-orange-500" size={20} />
+                          <h3 className="font-black uppercase tracking-widest text-sm">🎨 Color Customization (কালার কাস্টমাইজেশন)</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {/* Theme Presets */}
+                          <div className="bg-gray-900 p-6 rounded-3xl space-y-4 md:col-span-2 lg:col-span-3">
+                            <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Quick Apply Presets</h4>
+                            <div className="flex flex-wrap gap-3">
+                              {[
+                                { name: 'Orange', primary: '#FF6B00', accent: '#FF6B00', bg: '#FDFDFD' },
+                                { name: 'Blue Ocean', primary: '#0ea5e9', accent: '#0284c7', bg: '#f0f9ff' },
+                                { name: 'Green Nature', primary: '#22c55e', accent: '#16a34a', bg: '#f0fdf4' },
+                                { name: 'Purple Royal', primary: '#a855f7', accent: '#9333ea', bg: '#faf5ff' },
+                                { name: 'Red Passion', primary: '#ef4444', accent: '#dc2626', bg: '#fef2f2' },
+                                { name: 'Dark Mode', primary: '#f97316', accent: '#ea580c', bg: '#09090b', text: '#ffffff', headings: '#ffffff' },
+                                { name: 'Pink Sweet', primary: '#ec4899', accent: '#db2777', bg: '#fdf2f8' },
+                                { name: 'Yellow Sunshine', primary: '#eab308', accent: '#ca8a04', bg: '#fefce8' },
+                              ].map(theme => (
+                                <button 
+                                  key={theme.name}
+                                  onClick={() => {
+                                    const c = tempSettings.customization?.colors || INITIAL_SETTINGS.customization!.colors;
+                                    setTempSettings({
+                                      ...tempSettings,
+                                      primaryColor: theme.primary,
+                                      customization: {
+                                        ...tempSettings.customization!,
+                                        colors: {
+                                          ...c,
+                                          primary: theme.primary,
+                                          accent: theme.accent,
+                                          background: theme.bg,
+                                          textMain: theme.text || '#374151',
+                                          textHeadings: theme.headings || '#111827',
+                                          btnPrimaryBg: theme.primary,
+                                          categoryTabActiveBg: theme.primary,
+                                          priceColor: theme.primary,
+                                        }
+                                      }
+                                    });
+                                  }}
+                                  className="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-xl border border-gray-700 hover:border-orange-500 transition-all group"
+                                >
+                                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: theme.primary }}></div>
+                                  <span className="text-[10px] font-black uppercase text-gray-400 group-hover:text-white">{theme.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Specific Colors */}
+                          {[
+                            { label: 'Primary Theme', key: 'primary' },
+                            { label: 'Secondary Color', key: 'secondary' },
+                            { label: 'Accent Color', key: 'accent' },
+                            { label: 'Background', key: 'background' },
+                            { label: 'Main Text', key: 'textMain' },
+                            { label: 'Heading Text', key: 'textHeadings' },
+                            { label: 'Header Bg', key: 'headerBg' },
+                            { label: 'Header Text', key: 'headerText' },
+                            { label: 'Footer Bg', key: 'footerBg' },
+                            { label: 'Footer Text', key: 'footerText' },
+                            { label: 'Category Active', key: 'categoryTabActiveBg' },
+                            { label: 'WhatsApp Btn', key: 'whatsappBtn' },
+                          ].map(item => (
+                            <div key={item.key} className="bg-gray-50 p-4 rounded-2xl flex items-center justify-between border border-gray-100">
+                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{item.label}</label>
+                                <div className="flex items-center gap-3">
+                                  <input 
+                                    type="color" 
+                                    className="w-8 h-8 rounded-full border-none cursor-pointer"
+                                    value={(tempSettings.customization?.colors as any)?.[item.key] || '#000000'}
+                                    onChange={(e) => setTempSettings({
+                                      ...tempSettings,
+                                      customization: {
+                                        ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                        colors: {
+                                          ...(tempSettings.customization?.colors || INITIAL_SETTINGS.customization!.colors),
+                                          [item.key]: e.target.value
+                                        }
+                                      }
+                                    })}
+                                  />
+                                  <input 
+                                    type="text" 
+                                    className="bg-white border border-gray-200 rounded px-2 py-1 text-[10px] font-mono w-20"
+                                    value={(tempSettings.customization?.colors as any)?.[item.key] || '#000000'}
+                                    onChange={(e) => setTempSettings({
+                                      ...tempSettings,
+                                      customization: {
+                                        ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                        colors: {
+                                          ...(tempSettings.customization?.colors || INITIAL_SETTINGS.customization!.colors),
+                                          [item.key]: e.target.value
+                                        }
+                                      }
+                                    })}
+                                  />
+                                </div>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
+
+                    {/* Font Customization */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2">
+                          <Type className="text-orange-500" size={20} />
+                          <h3 className="font-black uppercase tracking-widest text-sm">🔤 Font Customization (ফন্ট কাস্টমাইজেশন)</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-8 rounded-[2.5rem]">
+                            <div className="space-y-4">
+                              <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest px-2">Font Families</h4>
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase ml-2 mb-1 block">Heading Font</label>
+                                  <select 
+                                    className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-sm"
+                                    value={tempSettings.customization?.fonts?.heading || 'Inter'}
+                                    onChange={(e) => setTempSettings({
+                                      ...tempSettings,
+                                      customization: {
+                                        ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                        fonts: { ...(tempSettings.customization?.fonts || INITIAL_SETTINGS.customization!.fonts), heading: e.target.value }
+                                      }
+                                    })}
+                                  >
+                                    <optgroup label="English Fonts">
+                                      {['Poppins', 'Inter', 'Roboto', 'Montserrat', 'Open Sans', 'Lato', 'Nunito', 'Playfair Display'].map(f => <option key={f} value={f}>{f}</option>)}
+                                    </optgroup>
+                                    <optgroup label="Bengali Fonts">
+                                      {['Noto Sans Bengali', 'Hind Siliguri', 'Tiro Bangla', 'Baloo Da 2', 'Mina', 'Anek Bangla', 'Galada'].map(f => <option key={f} value={f}>{f}</option>)}
+                                    </optgroup>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase ml-2 mb-1 block">Body Font</label>
+                                  <select 
+                                    className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-sm"
+                                    value={tempSettings.customization?.fonts?.body || 'Inter'}
+                                    onChange={(e) => setTempSettings({
+                                      ...tempSettings,
+                                      customization: {
+                                        ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                        fonts: { ...(tempSettings.customization?.fonts || INITIAL_SETTINGS.customization!.fonts), body: e.target.value }
+                                      }
+                                    })}
+                                  >
+                                    {['Inter', 'Poppins', 'Roboto', 'Hind Siliguri', 'Noto Sans Bengali'].map(f => <option key={f} value={f}>{f}</option>)}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest px-2">Font Sizes (px)</h4>
+                                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                                  {[
+                                    { label: 'Heading 1', key: 'heading1', min: 12, max: 80 },
+                                    { label: 'Heading 2', key: 'heading2', min: 12, max: 60 },
+                                    { label: 'Body Text', key: 'body', min: 10, max: 24 },
+                                    { label: 'Button Text', key: 'button', min: 10, max: 24 },
+                                    { label: 'Price text', key: 'price', min: 12, max: 40 },
+                                    { label: 'Menu text', key: 'menu', min: 10, max: 24 },
+                                    { label: 'Product Title', key: 'productTitle', min: 10, max: 28 },
+                                  ].map(f => (
+                                    <div key={f.key} className="space-y-1">
+                                      <div className="flex justify-between items-center text-[10px] font-black uppercase text-gray-400 px-2 tracking-widest">
+                                        <span>{f.label}</span>
+                                        <span>{(tempSettings.customization?.fonts?.sizes as any)?.[f.key] || 0}px</span>
+                                      </div>
+                                      <input 
+                                        type="range"
+                                        min={f.min}
+                                        max={f.max}
+                                        value={(tempSettings.customization?.fonts?.sizes as any)?.[f.key] || 0}
+                                        onChange={(e) => setTempSettings({
+                                          ...tempSettings,
+                                          customization: {
+                                            ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                            fonts: {
+                                              ...(tempSettings.customization?.fonts || INITIAL_SETTINGS.customization!.fonts),
+                                              sizes: {
+                                                ...(tempSettings.customization?.fonts?.sizes || INITIAL_SETTINGS.customization!.fonts.sizes),
+                                                [f.key]: parseInt(e.target.value)
+                                              }
+                                            }
+                                          }
+                                        })}
+                                        className="w-full accent-orange-500"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Visibility Toggles */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2">
+                          <Eye className="text-orange-500" size={20} />
+                          <h3 className="font-black uppercase tracking-widest text-sm">🔘 Section Visibility (সেকশন অন/অফ)</h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {[
+                             { label: 'Hero Banner', key: 'heroBanner' },
+                             { label: 'Shop Collection Btn', key: 'shopCollectionBtn' },
+                             { label: 'Learn More Btn', key: 'learnMoreBtn' },
+                             { label: 'Category Tabs', key: 'categoryTabs' },
+                             { label: 'Flash Sale Timer', key: 'flashSaleTimer' },
+                             { label: 'Flash Sale Section', key: 'flashSaleSection' },
+                             { label: 'Discount Badges', key: 'discountBadges' },
+                             { label: 'Stock Info', key: 'stockInfo' },
+                             { label: 'Star Ratings', key: 'starRatings' },
+                             { label: 'Wishlist Button', key: 'wishlistBtn' },
+                             { label: 'Share Button', key: 'shareBtn' },
+                             { label: 'WhatsApp Float', key: 'whatsappFloat' },
+                             { label: 'Cart Floating Icon', key: 'cartFloat' },
+                             { label: 'Search Bar', key: 'searchBar' },
+                             { label: 'Footer Section', key: 'footer' },
+                             { label: 'Newsletter Signup', key: 'newsletter' },
+                             { label: 'Social Media Links', key: 'socialLinks' },
+                          ].map(item => (
+                            <div key={item.key} className="p-4 bg-white border border-gray-100 rounded-xl flex items-center justify-between">
+                              <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">{item.label}</span>
+                              <button 
+                                onClick={() => setTempSettings({
+                                  ...tempSettings,
+                                  customization: {
+                                    ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                    visibility: {
+                                      ...(tempSettings.customization?.visibility || INITIAL_SETTINGS.customization!.visibility),
+                                      [item.key]: !(tempSettings.customization?.visibility as any)?.[item.key]
+                                    }
+                                  }
+                                })}
+                                className={cn(
+                                  "w-10 h-5 rounded-full p-0.5 transition-colors duration-300",
+                                  (tempSettings.customization?.visibility as any)?.[item.key] ? "bg-green-500" : "bg-gray-200"
+                                )}
+                              >
+                                <div className={cn("w-4 h-4 bg-white rounded-full transition-transform duration-300", (tempSettings.customization?.visibility as any)?.[item.key] ? "translate-x-5" : "translate-x-0")} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
+
+                    {/* Layout Controls */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2">
+                          <Layout className="text-orange-500" size={20} />
+                          <h3 className="font-black uppercase tracking-widest text-sm">📏 Size & Spacing (সাইজ ও স্পেসিং)</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-3xl">
+                            {[
+                               { label: 'Image Height', key: 'imageHeight', min: 100, max: 600, unit: 'px' },
+                               { label: 'Product Spacing', key: 'productSpacing', min: 0, max: 60, unit: 'px' },
+                               { label: 'Container Padding', key: 'containerPadding', min: 0, max: 100, unit: 'px' },
+                               { label: 'Border Radius', key: 'borderRadius', min: 0, max: 60, unit: 'px' },
+                               { label: 'Button Radius', key: 'buttonRadius', min: 0, max: 40, unit: 'px' },
+                               { label: 'Header Height', key: 'headerHeight', min: 40, max: 120, unit: 'px' },
+                               { label: 'Footer Height', key: 'footerHeight', min: 200, max: 800, unit: 'px' },
+                            ].map(item => (
+                              <div key={item.key} className="space-y-2">
+                                <div className="flex justify-between text-[10px] font-black uppercase text-gray-400 tracking-widest px-1">
+                                  <span>{item.label}</span>
+                                  <span>{(tempSettings.customization?.layout as any)?.[item.key] || 0}{item.unit}</span>
+                                </div>
+                                <input 
+                                  type="range"
+                                  min={item.min}
+                                  max={item.max}
+                                  value={(tempSettings.customization?.layout as any)?.[item.key] || 0}
+                                  onChange={(e) => setTempSettings({
+                                    ...tempSettings,
+                                    customization: {
+                                      ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                      layout: {
+                                        ...(tempSettings.customization?.layout || INITIAL_SETTINGS.customization!.layout),
+                                        [item.key]: parseInt(e.target.value)
+                                      }
+                                    }
+                                  })}
+                                  className="w-full accent-orange-500"
+                                />
+                              </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Text Customization */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2">
+                          <RefreshCcw className="text-orange-500" size={20} />
+                          <h3 className="font-black uppercase tracking-widest text-sm">📝 Text Editor (লেখা পরিবর্তন করুন)</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {[
+                             { label: 'Website Name', key: 'websiteName' },
+                             { label: 'Hero Main Title', key: 'heroTitle' },
+                             { label: 'Shop Button Text', key: 'shopCollectionBtn' },
+                             { label: 'Learn More Btn Text', key: 'learnMoreBtn' },
+                             { label: 'Flash Sale Title', key: 'flashSaleTitle' },
+                             { label: 'Confirm Order Label', key: 'confirmOrderBtn' },
+                          ].map(item => (
+                            <div key={item.key} className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-2">
+                              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{item.label}</label>
+                              <div className="flex gap-2">
+                                <input 
+                                  className="grow bg-gray-50 border border-gray-100 rounded-lg px-4 py-2 text-sm font-bold"
+                                  value={(tempSettings.customization?.text as any)?.[item.key] || ''}
+                                  onChange={(e) => setTempSettings({
+                                    ...tempSettings,
+                                    customization: {
+                                      ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                      text: {
+                                        ...(tempSettings.customization?.text || INITIAL_SETTINGS.customization!.text),
+                                        [item.key]: e.target.value
+                                      }
+                                    }
+                                  })}
+                                />
+                                <button className="bg-gray-100 p-2 rounded-lg text-gray-400 hover:text-green-500 hover:bg-green-50 transition-all"><Save size={16} /></button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
+
+                    {/* Footer Controls */}
+                    <div className="pt-10 flex flex-wrap gap-4 border-t border-gray-100">
+                        <button 
+                          onClick={handleSaveSettings}
+                          className="flex-grow md:flex-none px-12 py-5 bg-orange-500 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-orange-500/20 flex items-center justify-center gap-3 hover:scale-[1.02] transition-all"
+                        >
+                          <Save size={20} /> Save All Changes
+                        </button>
+                        <button 
+                          onClick={() => setTempSettings({...tempSettings, customization: INITIAL_SETTINGS.customization})}
+                          className="px-8 py-5 bg-gray-100 text-gray-600 font-extrabold uppercase tracking-widest rounded-2xl hover:bg-gray-200 transition-all"
+                        >
+                          Reset to Default
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const data = JSON.stringify(tempSettings.customization, null, 2);
+                            const blob = new Blob([data], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `ShopMix_Customization_${Date.now()}.json`;
+                            a.click();
+                          }}
+                          className="px-8 py-5 bg-gray-900 text-white font-extrabold uppercase tracking-widest rounded-2xl hover:bg-black transition-all flex items-center gap-2"
+                        >
+                          <Download size={18} /> Export Settings
+                        </button>
+                    </div>
+                  </motion.div>
+                )}
                 {/* DASHBOARD TAB */}
                 {activeTab === 'dashboard' && (
                   <motion.div 
@@ -378,7 +835,7 @@ const AdminPage: React.FC = () => {
                              <h2 className="text-2xl font-black uppercase tracking-tight">Active Inventory</h2>
                              <button 
                                 onClick={() => setEditingProduct({
-                                    name: '', price: 0, originalPrice: 0, image: '', category: 'Electronics', description: '', rating: 4.5, reviews: [], stock: 10, views: 0
+                                    id: '', name: '', price: 0, originalPrice: 0, image: '', category: 'Electronics', description: '', rating: 5, reviews: [], stock: 10, views: 0, source: 'own', variants: { colors: [], sizes: [] } as any, enableSizes: false, enableColors: false
                                 })}
                                 className="flex items-center gap-2 px-6 py-2 rounded-lg text-white font-bold text-sm shadow-md"
                                 style={{ backgroundColor: settings.primaryColor }}
@@ -488,15 +945,447 @@ const AdminPage: React.FC = () => {
                                                 onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})}
                                             />
                                         </div>
+                                        <div className="space-y-4 md:col-span-2">
+                                            <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-[#1a1a1a] text-white rounded-[2rem] border border-gray-800 shadow-2xl relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-[50px] -mr-16 -mt-16 group-hover:bg-orange-500/20 transition-colors duration-500"></div>
+                                                <div className="flex flex-col gap-2 relative z-10 w-full md:w-auto">
+                                                    <span className="text-[10px] font-black uppercase text-orange-500 tracking-[0.2em] mb-1">Product Strategy</span>
+                                                    <div className="flex bg-gray-800 p-1 rounded-xl">
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setEditingProduct({...editingProduct, source: 'own', isOwnInventory: true})}
+                                                            className={cn(
+                                                                "px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                                                                editingProduct.source === 'own' ? "bg-orange-500 text-white shadow-lg" : "text-gray-400 hover:text-gray-200"
+                                                            )}
+                                                        >
+                                                            Own Inventory
+                                                        </button>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setEditingProduct({...editingProduct, source: 'alibaba', isOwnInventory: false})}
+                                                            className={cn(
+                                                                "px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                                                                editingProduct.source === 'alibaba' ? "bg-orange-500 text-white shadow-lg" : "text-gray-400 hover:text-gray-200"
+                                                            )}
+                                                        >
+                                                            Alibaba Affiliate
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="hidden md:block w-px h-12 bg-gray-800"></div>
+                                                <div className="flex-grow relative z-10">
+                                                    <p className="text-[10px] font-medium text-gray-400 leading-relaxed">
+                                                        {editingProduct.source === 'own' 
+                                                            ? "Customers will checkout directly on your site and data will be sent via WhatsApp." 
+                                                            : "Customers will be redirected to the provided Alibaba affiliate link for the final purchase."}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {editingProduct.source === 'alibaba' ? (
+                                            <div className="space-y-1 md:col-span-2">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest flex items-center gap-2">
+                                                    Alibaba Affiliate Link <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
+                                                </label>
+                                                <div className="relative">
+                                                     <input 
+                                                        className="w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all shadow-sm font-bold placeholder:text-gray-200"
+                                                        value={editingProduct.affiliateLink || ''}
+                                                        placeholder="https://alibaba.com/product/..."
+                                                        onChange={e => setEditingProduct({...editingProduct, affiliateLink: e.target.value})}
+                                                    />
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500">
+                                                        <TrendingUp size={20} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-8 md:col-span-2 p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 shadow-inner">
+                                                {/* Size Section */}
+                                                <div className="space-y-6">
+                                                    <div className="flex items-center justify-between px-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2 h-6 bg-orange-500 rounded-full"></div>
+                                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Size Selection System</label>
+                                                        </div>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setEditingProduct({...editingProduct, enableSizes: !editingProduct.enableSizes})}
+                                                            className={cn(
+                                                                "w-12 h-6 rounded-full p-1 transition-colors duration-300",
+                                                                editingProduct.enableSizes ? "bg-orange-500" : "bg-gray-300"
+                                                            )}
+                                                        >
+                                                            <div className={cn("w-4 h-4 bg-white rounded-full transition-transform duration-300", editingProduct.enableSizes ? "translate-x-6" : "translate-x-0")} />
+                                                        </button>
+                                                    </div>
+
+                                                    {editingProduct.enableSizes && (
+                                                        <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                            {/* Custom Size Input */}
+                                                            <div className="flex gap-2">
+                                                                <input 
+                                                                    id="custom-size-input"
+                                                                    className="flex-grow bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all font-bold placeholder:text-gray-200"
+                                                                    placeholder="Type size and press Enter (e.g. XL)"
+                                                                    onKeyDown={e => {
+                                                                        if (e.key === 'Enter' || e.key === ',') {
+                                                                            e.preventDefault();
+                                                                            const val = e.currentTarget.value.trim().toUpperCase();
+                                                                            if (!val) return;
+                                                                            
+                                                                            const currentSizes = editingProduct.variants?.sizes || [];
+                                                                            if (currentSizes.some(s => s.name === val)) {
+                                                                                e.currentTarget.value = '';
+                                                                                return;
+                                                                            }
+
+                                                                            setEditingProduct({
+                                                                                ...editingProduct,
+                                                                                variants: {
+                                                                                    ...editingProduct.variants!,
+                                                                                    sizes: [...currentSizes, { id: `s-${Date.now()}`, name: val, priceModifier: 0 }]
+                                                                                }
+                                                                            });
+                                                                            e.currentTarget.value = '';
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const input = document.getElementById('custom-size-input') as HTMLInputElement;
+                                                                        const val = input.value.trim().toUpperCase();
+                                                                        if (!val) return;
+                                                                        const currentSizes = editingProduct.variants?.sizes || [];
+                                                                        if (currentSizes.some(s => s.name === val)) {
+                                                                            input.value = '';
+                                                                            return;
+                                                                        }
+                                                                        setEditingProduct({
+                                                                            ...editingProduct,
+                                                                            variants: {
+                                                                                ...editingProduct.variants!,
+                                                                                sizes: [...currentSizes, { id: `s-${Date.now()}`, name: val, priceModifier: 0 }]
+                                                                            }
+                                                                        });
+                                                                        input.value = '';
+                                                                    }}
+                                                                    className="bg-gray-900 text-white px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 transition-colors"
+                                                                >
+                                                                    + Add
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Quick Add Presets */}
+                                                            <div className="space-y-3">
+                                                                <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Quick Presets</p>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    <div className="flex flex-wrap gap-2 p-2 bg-white/50 rounded-2xl border border-gray-100">
+                                                                        <span className="text-[8px] font-black uppercase text-gray-300 self-center px-2">Clothing:</span>
+                                                                        {CLOTHING_SIZES.map(size => (
+                                                                            <button 
+                                                                                key={size}
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    const currentSizes = editingProduct.variants?.sizes || [];
+                                                                                    if (currentSizes.some(s => s.name === size)) return;
+                                                                                    setEditingProduct({
+                                                                                        ...editingProduct,
+                                                                                        variants: {
+                                                                                            ...editingProduct.variants!,
+                                                                                            sizes: [...currentSizes, { id: `s-${Date.now()}`, name: size, priceModifier: 0 }]
+                                                                                        }
+                                                                                    });
+                                                                                }}
+                                                                                className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-[10px] font-black hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm"
+                                                                            >
+                                                                                {size}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                    <div className="flex flex-wrap gap-2 p-2 bg-white/50 rounded-2xl border border-gray-100">
+                                                                        <span className="text-[8px] font-black uppercase text-gray-300 self-center px-2">Shoes:</span>
+                                                                        {SHOE_SIZES.map(size => (
+                                                                            <button 
+                                                                                key={size}
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    const currentSizes = editingProduct.variants?.sizes || [];
+                                                                                    if (currentSizes.some(s => s.name === size)) return;
+                                                                                    setEditingProduct({
+                                                                                        ...editingProduct,
+                                                                                        variants: {
+                                                                                            ...editingProduct.variants!,
+                                                                                            sizes: [...currentSizes, { id: `s-${Date.now()}`, name: size, priceModifier: 0 }]
+                                                                                        }
+                                                                                    });
+                                                                                }}
+                                                                                className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-[10px] font-black hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm"
+                                                                            >
+                                                                                {size}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="flex gap-2">
+                                                                    <input 
+                                                                        id="custom-size-input"
+                                                                        className="flex-grow bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all font-bold placeholder:text-gray-300"
+                                                                        placeholder="Custom Size (e.g. 10.5, XXL, Small)"
+                                                                        onKeyDown={e => {
+                                                                            if (e.key === 'Enter' || e.key === ',') {
+                                                                                e.preventDefault();
+                                                                                document.getElementById('add-size-btn')?.click();
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                    <button 
+                                                                        id="add-size-btn"
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const input = document.getElementById('custom-size-input') as HTMLInputElement;
+                                                                            const name = input.value.trim().replace(/,/g, '');
+                                                                            if (!name) return;
+                                                                            const currentSizes = editingProduct.variants?.sizes || [];
+                                                                            if (currentSizes.some(s => s.name === name)) {
+                                                                                input.value = '';
+                                                                                return;
+                                                                            }
+                                                                            setEditingProduct({
+                                                                                ...editingProduct,
+                                                                                variants: {
+                                                                                    ...editingProduct.variants!,
+                                                                                    sizes: [...currentSizes, { id: `s-${Date.now()}`, name, priceModifier: 0 }]
+                                                                                }
+                                                                            });
+                                                                            input.value = '';
+                                                                        }}
+                                                                        className="bg-gray-900 text-white px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 transition-colors"
+                                                                    >
+                                                                        + Add Size
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Added Sizes Tags */}
+                                                            <div className="flex flex-wrap gap-2 pt-2">
+                                                                {editingProduct.variants?.sizes?.map(s => (
+                                                                    <div key={s.id} className="flex items-center gap-2 pl-4 pr-2 py-2 bg-orange-500 text-white rounded-2xl shadow-lg shadow-orange-500/20 animate-in zoom-in duration-300">
+                                                                        <span className="text-[10px] font-black uppercase tracking-widest">{s.name}</span>
+                                                                        <button 
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setEditingProduct({
+                                                                                    ...editingProduct,
+                                                                                    variants: {
+                                                                                        ...editingProduct.variants!,
+                                                                                        sizes: editingProduct.variants!.sizes.filter(item => item.id !== s.id)
+                                                                                    }
+                                                                                });
+                                                                            }}
+                                                                            className="w-6 h-6 rounded-lg bg-black/20 flex items-center justify-center hover:bg-black/40 transition-colors"
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                                {(editingProduct.variants?.sizes?.length || 0) === 0 && (
+                                                                    <p className="text-[10px] italic text-gray-400 p-2">No sizes added yet.</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="h-px bg-gray-200"></div>
+
+                                                {/* Color Section */}
+                                                <div className="space-y-6">
+                                                    <div className="flex items-center justify-between px-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2 h-6 bg-orange-500 rounded-full"></div>
+                                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Color Branding Engine</label>
+                                                        </div>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setEditingProduct({...editingProduct, enableColors: !editingProduct.enableColors})}
+                                                            className={cn(
+                                                                "w-12 h-6 rounded-full p-1 transition-colors duration-300",
+                                                                editingProduct.enableColors ? "bg-orange-500" : "bg-gray-300"
+                                                            )}
+                                                        >
+                                                            <div className={cn("w-4 h-4 bg-white rounded-full transition-transform duration-300", editingProduct.enableColors ? "translate-x-6" : "translate-x-0")} />
+                                                        </button>
+                                                    </div>
+
+                                                    {editingProduct.enableColors && (
+                                                        <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                            {/* Color Inputs */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="flex gap-2">
+                                                                    <input 
+                                                                        id="custom-color-input"
+                                                                        className="flex-grow bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all font-bold placeholder:text-gray-200"
+                                                                        placeholder="Color Name (e.g. Navy Blue)"
+                                                                        onKeyDown={e => {
+                                                                            if (e.key === 'Enter' || e.key === ',') {
+                                                                                e.preventDefault();
+                                                                                document.getElementById('add-color-btn')?.click();
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <div className="flex gap-2">
+                                                                    <div className="relative flex-grow">
+                                                                        <input 
+                                                                            id="custom-hex-input"
+                                                                            type="color"
+                                                                            className="w-full h-14 bg-white border-2 border-gray-100 rounded-2xl p-1 cursor-pointer"
+                                                                            defaultValue="#000000"
+                                                                        />
+                                                                    </div>
+                                                                    <button 
+                                                                        id="add-color-btn"
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const nameInput = document.getElementById('custom-color-input') as HTMLInputElement;
+                                                                            const hexInput = document.getElementById('custom-hex-input') as HTMLInputElement;
+                                                                            const name = nameInput.value.trim().replace(/,/g, '');
+                                                                            const hex = hexInput.value;
+                                                                            if (!name) return;
+                                                                            
+                                                                            const currentColors = editingProduct.variants?.colors || [];
+                                                                            if (currentColors.some(c => c.name === name)) {
+                                                                                nameInput.value = '';
+                                                                                return;
+                                                                            }
+
+                                                                            setEditingProduct({
+                                                                                ...editingProduct,
+                                                                                variants: {
+                                                                                    ...editingProduct.variants!,
+                                                                                    colors: [...currentColors, { id: `c-${Date.now()}`, name, hex, priceModifier: 0 }]
+                                                                                }
+                                                                            });
+                                                                            nameInput.value = '';
+                                                                        }}
+                                                                        className="bg-gray-900 text-white px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 transition-colors"
+                                                                    >
+                                                                        + Add Color
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Color Presets */}
+                                                            <div className="space-y-3">
+                                                                <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Universal Swatches</p>
+                                                                <div className="flex flex-wrap gap-2 p-4 bg-white rounded-[2rem] border border-gray-100">
+                                                                    {COLOR_PRESETS.map(color => (
+                                                                        <button 
+                                                                            key={color.name}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                const currentColors = editingProduct.variants?.colors || [];
+                                                                                if (currentColors.some(c => c.name === color.name)) return;
+                                                                                setEditingProduct({
+                                                                                    ...editingProduct,
+                                                                                    variants: {
+                                                                                        ...editingProduct.variants!,
+                                                                                        colors: [...currentColors, { id: `c-${Date.now()}`, name: color.name, hex: color.hex, priceModifier: 0 }]
+                                                                                    }
+                                                                                });
+                                                                            }}
+                                                                            className="flex items-center gap-2 pl-2 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-2xl hover:border-orange-500 hover:bg-orange-50 transition-all group"
+                                                                        >
+                                                                            <div className="w-5 h-5 rounded-full shadow-inner border border-gray-200" style={{ backgroundColor: color.hex }}></div>
+                                                                            <span className="text-[10px] font-black uppercase text-gray-400 group-hover:text-orange-500">{color.name}</span>
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Added Colors Tags */}
+                                                            <div className="flex flex-wrap gap-3 pt-2">
+                                                                {editingProduct.variants?.colors?.map(c => (
+                                                                    <div key={c.id} className="flex items-center gap-3 pl-3 pr-2 py-2 bg-[#1a1a1a] text-white rounded-[1.2rem] shadow-xl border border-gray-800 animate-in zoom-in duration-300">
+                                                                        <div className="w-6 h-6 rounded-full border border-gray-700 shadow-inner" style={{ backgroundColor: c.hex }}></div>
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-[9px] font-black uppercase tracking-widest leading-none mb-0.5">{c.name}</span>
+                                                                            <span className="text-[7px] font-mono text-gray-500 uppercase tracking-widest">{c.hex}</span>
+                                                                        </div>
+                                                                        <button 
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setEditingProduct({
+                                                                                    ...editingProduct,
+                                                                                    variants: {
+                                                                                        ...editingProduct.variants!,
+                                                                                        colors: editingProduct.variants!.colors.filter(item => item.id !== c.id)
+                                                                                    }
+                                                                                });
+                                                                            }}
+                                                                            className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-orange-500 transition-colors"
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                                {(editingProduct.variants?.colors?.length || 0) === 0 && (
+                                                                    <p className="text-[10px] italic text-gray-400 p-2">No colors added yet.</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <div className="space-y-1 md:col-span-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Image URL</label>
-                                            <input 
-                                                required
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4"
-                                                value={editingProduct.image}
-                                                placeholder="https://example.com/item.jpg"
-                                                onChange={e => setEditingProduct({...editingProduct, image: e.target.value})}
-                                            />
+                                            <div className="flex justify-between items-center px-1 mb-1">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">High-Res Media URL (Image/Portrait Video)</label>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setActiveTab('media')}
+                                                    className="text-[10px] font-black uppercase text-orange-500 hover:underline tracking-widest"
+                                                >
+                                                    Open Media Library
+                                                </button>
+                                            </div>
+                                            <div className="flex flex-col sm:flex-row gap-4">
+                                                <div className="flex-1 space-y-1">
+                                                    <label className="text-[9px] font-bold text-gray-300 uppercase pl-1">Main Cover Image URL</label>
+                                                    <div className="relative">
+                                                        <input 
+                                                            required
+                                                            className="w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all shadow-sm font-mono text-xs"
+                                                            value={editingProduct.image}
+                                                            placeholder="https://example.com/image.jpg"
+                                                            onChange={e => setEditingProduct({...editingProduct, image: e.target.value})}
+                                                        />
+                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
+                                                            <ImageIcon size={18} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 space-y-1">
+                                                     <label className="text-[9px] font-bold text-gray-300 uppercase pl-1">Cinematic Video URL (mp4)</label>
+                                                     <div className="relative">
+                                                        <input 
+                                                            className="w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all shadow-sm font-mono text-xs"
+                                                            value={editingProduct.videoUrl || ''}
+                                                            placeholder="https://example.com/video.mp4"
+                                                            onChange={e => setEditingProduct({...editingProduct, videoUrl: e.target.value})}
+                                                        />
+                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
+                                                            <Video size={18} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div className="space-y-1 md:col-span-2">
                                             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest px-1">Rich Product Description</label>
@@ -591,6 +1480,191 @@ const AdminPage: React.FC = () => {
                                         value={tempSettings.heroSubtext}
                                         onChange={e => setTempSettings({...tempSettings, heroSubtext: e.target.value})}
                                     />
+                                </div>
+                            </div>
+                        </section>
+                        
+                        {/* Flash Sale Section */}
+                        <section className="space-y-6 pt-10 border-t border-gray-100">
+                            <div className="flex items-center gap-2">
+                                <Zap className="text-orange-500" size={20} />
+                                <h3 className="text-sm font-black uppercase tracking-widest text-gray-800">Flash Sale Configuration</h3>
+                            </div>
+                            
+                            <div className="bg-orange-50 border border-orange-100 rounded-2xl p-6 space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <p className="font-bold text-gray-800">Enable Flash Sale Countdown</p>
+                                        <p className="text-xs text-gray-500">Enable or disable the real-time timer on the homepage</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setTempSettings({
+                                            ...tempSettings, 
+                                            flashSale: { 
+                                                ...(tempSettings.flashSale || { startTime: '', endTime: '', endMessage: '', isEnabled: false }), 
+                                                isEnabled: !tempSettings.flashSale?.isEnabled 
+                                            }
+                                        })}
+                                        className={cn(
+                                            "w-12 h-6 rounded-full p-1 transition-colors duration-300",
+                                            tempSettings.flashSale?.isEnabled ? "bg-orange-500" : "bg-gray-300"
+                                        )}
+                                    >
+                                        <div className={cn("w-4 h-4 bg-white rounded-full transition-transform duration-300", tempSettings.flashSale?.isEnabled ? "translate-x-6" : "translate-x-0")} />
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Start Date & Time</label>
+                                        <input 
+                                            type="datetime-local"
+                                            className="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 font-bold"
+                                            value={tempSettings.flashSale?.startTime ? new Date(new Date(tempSettings.flashSale.startTime).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                flashSale: {
+                                                    ...(tempSettings.flashSale || { startTime: '', endTime: '', endMessage: '', isEnabled: false }),
+                                                    startTime: new Date(e.target.value).toISOString()
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">End Date & Time</label>
+                                        <input 
+                                            type="datetime-local"
+                                            className="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 font-bold"
+                                            value={tempSettings.flashSale?.endTime ? new Date(new Date(tempSettings.flashSale.endTime).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                flashSale: {
+                                                    ...(tempSettings.flashSale || { startTime: '', endTime: '', endMessage: '', isEnabled: false }),
+                                                    endTime: new Date(e.target.value).toISOString()
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Custom End Message</label>
+                                        <input 
+                                            placeholder="Flash Sale Ended! Stay tuned for more."
+                                            className="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 font-medium"
+                                            value={tempSettings.flashSale?.endMessage || ''}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                flashSale: {
+                                                    ...(tempSettings.flashSale || { startTime: '', endTime: '', endMessage: '', isEnabled: false }),
+                                                    endMessage: e.target.value
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-6 border-t border-orange-100">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-bold text-gray-800">Auto-Restart Sale</p>
+                                            <p className="text-[10px] text-gray-400">Restart automatically when timer hits zero</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => setTempSettings({
+                                                ...tempSettings,
+                                                flashSale: {
+                                                    ...(tempSettings.flashSale || { startTime: '', endTime: '', endMessage: '', isEnabled: false }),
+                                                    autoRestart: !tempSettings.flashSale?.autoRestart
+                                                }
+                                            })}
+                                            className={cn(
+                                                "w-12 h-6 rounded-full p-1 transition-colors duration-300",
+                                                tempSettings.flashSale?.autoRestart ? "bg-orange-500" : "bg-gray-200"
+                                            )}
+                                        >
+                                            <div className={cn("w-4 h-4 bg-white rounded-full transition-transform duration-300", tempSettings.flashSale?.autoRestart ? "translate-x-6" : "translate-x-0")} />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Quick Set Duration</p>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-[8px] font-bold text-gray-500 uppercase">Hours</label>
+                                                <input type="number" id="fs-h" placeholder="0" className="w-full bg-white border border-gray-200 rounded-lg p-2 font-bold text-center" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[8px] font-bold text-gray-500 uppercase">Minutes</label>
+                                                <input type="number" id="fs-m" placeholder="0" className="w-full bg-white border border-gray-200 rounded-lg p-2 font-bold text-center" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[8px] font-bold text-gray-500 uppercase">Seconds</label>
+                                                <input type="number" id="fs-s" placeholder="0" className="w-full bg-white border border-gray-200 rounded-lg p-2 font-bold text-center" />
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                const h = parseInt((document.getElementById('fs-h') as HTMLInputElement).value) || 0;
+                                                const m = parseInt((document.getElementById('fs-m') as HTMLInputElement).value) || 0;
+                                                const s = parseInt((document.getElementById('fs-s') as HTMLInputElement).value) || 0;
+                                                const duration = (h * 3600 + m * 60 + s);
+                                                if (duration <= 0) return alert('Please set a duration greater than zero');
+                                                
+                                                const now = new Date();
+                                                const end = new Date(now.getTime() + duration * 1000);
+                                                
+                                                setTempSettings({
+                                                    ...tempSettings,
+                                                    flashSale: {
+                                                        ...(tempSettings.flashSale || { startTime: '', endTime: '', endMessage: '', isEnabled: false }),
+                                                        startTime: now.toISOString(),
+                                                        endTime: end.toISOString(),
+                                                        durationSeconds: duration,
+                                                        isEnabled: true
+                                                    }
+                                                });
+                                            }}
+                                            className="w-full py-3 bg-[#1a1a1a] text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-orange-500 transition-colors shadow-lg shadow-black/10"
+                                        >
+                                            Apply Duration & Start Sale
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={() => {
+                                            const now = new Date();
+                                            const end = new Date(now.getTime() + 2 * 60 * 60 * 1000); 
+                                            setTempSettings({
+                                                ...tempSettings,
+                                                flashSale: {
+                                                    ...(tempSettings.flashSale || { startTime: '', endTime: '', endMessage: '', isEnabled: false }),
+                                                    startTime: now.toISOString(),
+                                                    endTime: end.toISOString(),
+                                                    isEnabled: true
+                                                }
+                                            });
+                                        }}
+                                        className="text-[10px] font-black uppercase tracking-widest text-orange-600 bg-white border border-orange-200 px-4 py-2.5 rounded-lg hover:bg-orange-100 transition-all shadow-sm"
+                                    >
+                                        Quick Set: 2 Hours
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            setTempSettings({
+                                                ...tempSettings,
+                                                flashSale: {
+                                                    ...(tempSettings.flashSale || { startTime: '', endTime: '', endMessage: '', isEnabled: false }),
+                                                    isEnabled: false,
+                                                    startTime: '',
+                                                    endTime: ''
+                                                }
+                                            });
+                                        }}
+                                        className="text-[10px] font-black uppercase tracking-widest text-gray-500 bg-white border border-gray-200 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                                    >
+                                        Reset Timer
+                                    </button>
                                 </div>
                             </div>
                         </section>
@@ -697,8 +1771,487 @@ const AdminPage: React.FC = () => {
                     </motion.div>
                 )}
 
-                {/* ORDERS TAB */}
-                {activeTab === 'orders' && (
+                {/* CUSTOMIZATION TAB */}
+                {activeTab === 'customization' && (
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-8"
+                    >
+                         <div className="pb-6 border-b border-gray-100">
+                             <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+                                🎨 ওয়েবসাইট কাস্টমাইজেশন <span className="text-gray-300 font-medium text-lg">/ Website Customization</span>
+                             </h2>
+                             <p className="text-gray-400 text-sm mt-1">কন্ট্রোল প্যানেল থেকে আপনার ওয়েবসাইটের সবকিছু পরিবর্তন করুন (Full Control Over Your Website)</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {/* 1. LANGUAGE SETTINGS */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-3 text-orange-500">
+                                    <Globe size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">১. ভাষা সেটিংস / Language</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <p className="text-[10px] text-gray-500 uppercase font-black">সিলেক্ট করুন (Primary Language)</p>
+                                    <div className="flex gap-2">
+                                        {(['bn', 'en', 'mixed'] as const).map(lang => (
+                                            <button 
+                                                key={lang}
+                                                onClick={() => setTempSettings({
+                                                    ...tempSettings, 
+                                                    customization: { 
+                                                        ...(tempSettings.customization || INITIAL_SETTINGS.customization!), 
+                                                        language: lang 
+                                                    }
+                                                })}
+                                                className={cn(
+                                                    "flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all",
+                                                    tempSettings.customization?.language === lang 
+                                                        ? "bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20" 
+                                                        : "bg-white border-gray-200 text-gray-400 hover:border-orange-200"
+                                                )}
+                                            >
+                                                {lang === 'bn' ? 'বাংলা' : lang === 'en' ? 'English' : 'Mixed'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 2. COLOR CUSTOMIZATION */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-3 text-blue-500">
+                                    <Palette size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">২. রঙ কাস্টমাইজেশন / Colors</h3>
+                                </div>
+                                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                                    {[
+                                        { label: 'Primary (প্রাইমারি)', key: 'primary' },
+                                        { label: 'Background (ব্যাকগ্রাউন্ড)', key: 'background' },
+                                        { label: 'Header BG (হেডার)', key: 'headerBg' },
+                                        { label: 'Footer BG (ফুটার)', key: 'footerBg' },
+                                        { label: 'Price (প্রাইস)', key: 'priceColor' },
+                                        { label: 'WhatsApp (হোয়াটসঅ্যাপ)', key: 'whatsappBtn' }
+                                    ].map(color => (
+                                        <div key={color.key} className="flex flex-col gap-1">
+                                            <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">{color.label}</label>
+                                            <div className="flex gap-2">
+                                                <input 
+                                                    type="color" 
+                                                    className="w-8 h-8 rounded shrink-0 cursor-pointer"
+                                                    value={(tempSettings.customization?.colors as any)?.[color.key] || '#000000'}
+                                                    onChange={e => setTempSettings({
+                                                        ...tempSettings,
+                                                        customization: {
+                                                            ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                            colors: { 
+                                                                ...(tempSettings.customization?.colors || INITIAL_SETTINGS.customization!.colors), 
+                                                                [color.key]: e.target.value 
+                                                            }
+                                                        }
+                                                    })}
+                                                />
+                                                <input 
+                                                    className="grow p-2 text-[10px] font-mono border rounded uppercase"
+                                                    value={(tempSettings.customization?.colors as any)?.[color.key] || '#000000'}
+                                                    onChange={e => setTempSettings({
+                                                        ...tempSettings,
+                                                        customization: {
+                                                            ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                            colors: { 
+                                                                ...(tempSettings.customization?.colors || INITIAL_SETTINGS.customization!.colors), 
+                                                                [color.key]: e.target.value 
+                                                            }
+                                                        }
+                                                    })}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* 3. FONT & TEXT STYLE */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-3 text-purple-500">
+                                    <TypeIcon size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">৩. ফন্ট ও টেক্সট / Font & Style</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    {/* Heading Font Size */}
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-baseline">
+                                            <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">হেডিং সাইজ (H1 Size)</label>
+                                            <span className="text-[10px] font-bold text-orange-500">{tempSettings.customization?.fonts?.sizes?.heading1}px</span>
+                                        </div>
+                                        <input 
+                                            type="range" min="20" max="80" 
+                                            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                            value={tempSettings.customization?.fonts?.sizes?.heading1 || 48}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                    fonts: {
+                                                        ...(tempSettings.customization?.fonts || INITIAL_SETTINGS.customization!.fonts),
+                                                        sizes: { 
+                                                            ...(tempSettings.customization?.fonts?.sizes || INITIAL_SETTINGS.customization!.fonts.sizes), 
+                                                            heading1: Number(e.target.value) 
+                                                        }
+                                                    }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                    {/* Body Font Size */}
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-baseline">
+                                            <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">বডি সাইজ (Body Size)</label>
+                                            <span className="text-[10px] font-bold text-orange-500">{tempSettings.customization?.fonts?.sizes?.body}px</span>
+                                        </div>
+                                        <input 
+                                            type="range" min="12" max="24" 
+                                            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                            value={tempSettings.customization?.fonts?.sizes?.body || 16}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                    fonts: {
+                                                        ...(tempSettings.customization?.fonts || INITIAL_SETTINGS.customization!.fonts),
+                                                        sizes: { 
+                                                            ...(tempSettings.customization?.fonts?.sizes || INITIAL_SETTINGS.customization!.fonts.sizes), 
+                                                            body: Number(e.target.value) 
+                                                        }
+                                                    }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                    {/* Heading Style */}
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">ফন্ট স্টাইল (Heading Font)</label>
+                                        <select 
+                                            className="w-full p-2 text-xs border rounded-lg bg-white"
+                                            value={tempSettings.customization?.fonts?.heading || 'Inter'}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                    fonts: { 
+                                                        ...(tempSettings.customization?.fonts || INITIAL_SETTINGS.customization!.fonts), 
+                                                        heading: e.target.value 
+                                                    }
+                                                }
+                                            })}
+                                        >
+                                            <option value="Inter">Inter (Classic)</option>
+                                            <option value="Poppins">Poppins (Modern)</option>
+                                            <option value="Playfair Display">Playfair (Elegant)</option>
+                                            <option value="Space Grotesk">Space Grotesk (Tech)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 4. SECTION VISIBILITY */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-3 text-red-500">
+                                    <Eye size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">৪. সেকশন শো/হাইড / Visibility</h3>
+                                </div>
+                                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                                    {[
+                                        { label: 'Hero Banner (হিরো ব্যানার)', key: 'heroBanner' },
+                                        { label: 'Category Tabs (ক্যাটাগরি)', key: 'categoryTabs' },
+                                        { label: 'Flash Sale (ফ্ল্যাশ সেল)', key: 'flashSaleSection' },
+                                        { label: 'Search Bar (সার্চ বার)', key: 'searchBar' },
+                                        { label: 'Wishlist (উইশলিস্ট)', key: 'wishlistBtn' },
+                                        { label: 'WhatsApp Button (হোয়াটসঅ্যাপ)', key: 'whatsappFloat' }
+                                    ].map(item => (
+                                        <div key={item.key} className="flex items-center justify-between p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                            <span className="text-[10px] font-bold text-gray-600">{item.label}</span>
+                                            <button 
+                                                onClick={() => setTempSettings({
+                                                    ...tempSettings,
+                                                    customization: {
+                                                        ...tempSettings.customization!,
+                                                        visibility: { 
+                                                            ...tempSettings.customization!.visibility, 
+                                                            [item.key]: !(tempSettings.customization?.visibility as any)?.[item.key] 
+                                                        }
+                                                    }
+                                                })}
+                                                className={cn(
+                                                    "w-10 h-5 rounded-full p-1 transition-colors duration-300",
+                                                    (tempSettings.customization?.visibility as any)?.[item.key] ? "bg-green-500" : "bg-gray-300"
+                                                )}
+                                            >
+                                                <div className={cn("w-3 h-3 bg-white rounded-full transition-transform duration-300", (tempSettings.customization?.visibility as any)?.[item.key] ? "translate-x-5" : "translate-x-0")} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* 5. LAYOUT & SPACING */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-3 text-green-500">
+                                    <Maximize2 size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">৫. লেআউট ও সাইজ / Layout</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    {/* Border Radius */}
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-baseline">
+                                            <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">রাউন্ডিং (Border Radius)</label>
+                                            <span className="text-[10px] font-bold text-orange-500">{tempSettings.customization?.layout?.borderRadius}px</span>
+                                        </div>
+                                        <input 
+                                            type="range" min="0" max="50" 
+                                            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                            value={tempSettings.customization?.layout?.borderRadius || 24}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...tempSettings.customization!,
+                                                    layout: { ...tempSettings.customization?.layout, borderRadius: Number(e.target.value) }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                    {/* Product Grid Height */}
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-baseline">
+                                            <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">পণ্যের ছবি হাইট (Image Height)</label>
+                                            <span className="text-[10px] font-bold text-orange-500">{tempSettings.customization?.layout?.imageHeight}px</span>
+                                        </div>
+                                        <input 
+                                            type="range" min="150" max="500" 
+                                            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                            value={tempSettings.customization?.layout?.imageHeight || 300}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...tempSettings.customization!,
+                                                    layout: { ...tempSettings.customization?.layout, imageHeight: Number(e.target.value) }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 6. EDIT ANY TEXT */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-3 text-cyan-500">
+                                    <Edit size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">৬. টেক্সট পরিবর্তন / Edit Text</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">ওয়েবসাইট নাম (Website Name)</label>
+                                        <input 
+                                            className="w-full p-2 text-xs border rounded-lg"
+                                            value={tempSettings.customization?.text?.websiteName || ''}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...tempSettings.customization!,
+                                                    text: { ...tempSettings.customization?.text, websiteName: e.target.value }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">হিরো টাইটেল (Hero Title)</label>
+                                        <input 
+                                            className="w-full p-2 text-xs border rounded-lg"
+                                            value={tempSettings.customization?.text?.heroTitle || ''}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                    text: { 
+                                                        ...(tempSettings.customization?.text || INITIAL_SETTINGS.customization!.text), 
+                                                        heroTitle: e.target.value 
+                                                    }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">ফ্ল্যাশ সেল টাইটেল (Flash Sale Title)</label>
+                                        <input 
+                                            className="w-full p-2 text-xs border rounded-lg"
+                                            value={tempSettings.customization?.text?.flashSaleTitle || ''}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                    text: { 
+                                                        ...(tempSettings.customization?.text || INITIAL_SETTINGS.customization!.text), 
+                                                        flashSaleTitle: e.target.value 
+                                                    }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">ফ্ল্যাশ সেল শেষ টেক্সট (Flash Sale Ended Text)</label>
+                                        <input 
+                                            className="w-full p-2 text-xs border rounded-lg"
+                                            value={tempSettings.customization?.text?.flashSaleEnded || ''}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                    text: { 
+                                                        ...(tempSettings.customization?.text || INITIAL_SETTINGS.customization!.text), 
+                                                        flashSaleEnded: e.target.value 
+                                                    }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 7. PRODUCT POSTING ENHANCEMENTS */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-3 text-yellow-600">
+                                    <Package size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">৭. অ্যাডভান্সড পোস্টিং / Advanced Posting</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-2 bg-white rounded-xl">
+                                        <span className="text-[10px] font-bold text-gray-600">Auto Open Cart on Add</span>
+                                        <button 
+                                            onClick={() => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                    productPosting: { 
+                                                        ...(tempSettings.customization?.productPosting || { defaultDescription: '', autoAddToCart: false, soldOutThreshold: 0 }), 
+                                                        autoAddToCart: !tempSettings.customization?.productPosting?.autoAddToCart 
+                                                    }
+                                                }
+                                            })}
+                                            className={cn(
+                                                "w-10 h-5 rounded-full p-1 transition-colors",
+                                                tempSettings.customization?.productPosting?.autoAddToCart ? "bg-orange-500" : "bg-gray-300"
+                                            )}
+                                        >
+                                            <div className={cn("w-3 h-3 bg-white rounded-full transition-transform", tempSettings.customization?.productPosting?.autoAddToCart ? "translate-x-5" : "translate-x-0")} />
+                                        </button>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Default Sold Out Alert</label>
+                                        <input 
+                                            type="number"
+                                            className="w-full p-2 text-xs border rounded-lg"
+                                            value={tempSettings.customization?.productPosting?.soldOutThreshold || 0}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...(tempSettings.customization || INITIAL_SETTINGS.customization!),
+                                                    productPosting: { 
+                                                        ...(tempSettings.customization?.productPosting || { defaultDescription: '', autoAddToCart: false, soldOutThreshold: 0 }), 
+                                                        soldOutThreshold: Number(e.target.value) 
+                                                    }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 8. SETTINGS MANAGEMENT */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-3 text-emerald-600">
+                                    <Save size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">৮. সেভ ইওর কাস্টমাইজেশন / Save</h3>
+                                </div>
+                                <div className="grid grid-cols-1 gap-2 pt-2">
+                                    <button 
+                                        onClick={handleSaveSettings}
+                                        className="w-full py-4 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-500 transition-all flex items-center justify-center gap-2 shadow-xl"
+                                    >
+                                        <Save size={16} /> সেভ করুন / Save Design
+                                    </button>
+                                    <button 
+                                        onClick={resetSettings}
+                                        className="w-full py-3 bg-white border border-gray-200 text-gray-400 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <RefreshCcw size={14} /> রিসেট করুন / Reset
+                                    </button>
+                                </div>
+                            </section>
+
+                            {/* 9. SAFETY & SECURITY */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-3 text-indigo-600">
+                                    <Lock size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">৯. নিরাপত্তা সেটিংস / Safety</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">অ্যাডমিন ইমেইল (Admin Email)</label>
+                                        <input 
+                                            className="w-full p-2 text-xs border rounded-lg font-mono"
+                                            value={tempSettings.security?.adminEmail || ''}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                security: { ...tempSettings.security!, adminEmail: e.target.value }
+                                            })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">নতুন পাসওয়ার্ড (New Password)</label>
+                                        <input 
+                                            type="password"
+                                            className="w-full p-2 text-xs border rounded-lg font-mono"
+                                            placeholder="Leave blank to keep current"
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                security: { ...tempSettings.security!, adminPassword: e.target.value || 't112233t' }
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 10. ADVANCED OPTIONS */}
+                            <section className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4 md:col-span-2 lg:col-span-1">
+                                <div className="flex items-center gap-3 text-gray-800">
+                                    <Zap size={20} />
+                                    <h3 className="font-black uppercase tracking-tight text-sm">১০. অ্যাডভান্সড / Advanced</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Custom CSS (নিজস্ব ডিজাইন কোড)</label>
+                                        <textarea 
+                                            className="w-full p-2 text-[10px] font-mono border rounded-lg h-32"
+                                            placeholder=".my-class { color: red; }"
+                                            value={tempSettings.customization?.advanced?.customCss || ''}
+                                            onChange={e => setTempSettings({
+                                                ...tempSettings,
+                                                customization: {
+                                                    ...tempSettings.customization!,
+                                                    advanced: { ...tempSettings.customization!.advanced, customCss: e.target.value }
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </motion.div>
+                )}
+
+                 {activeTab === 'orders' && (
                     <motion.div 
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -733,54 +2286,123 @@ const AdminPage: React.FC = () => {
                                     <div key={order.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-gray-50">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
-                                                    <ShoppingBag size={20} />
+                                                <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center text-white shadow-lg">
+                                                    <ShoppingBag size={20} className="text-orange-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-black text-gray-900 uppercase tracking-tight">{order.id}</h4>
+                                                    <h4 className="font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                                                        {order.id}
+                                                        {order.status === 'pending' && <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>}
+                                                    </h4>
                                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{new Date(order.createdAt).toLocaleString()}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                 <span className="bg-yellow-50 text-yellow-600 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-yellow-100">
-                                                     {order.status}
-                                                 </span>
-                                                 <span className="font-black text-lg" style={{ color: settings.primaryColor }}>{formatPrice(order.total)}</span>
+                                                 <select 
+                                                   value={order.status}
+                                                   onChange={(e) => {
+                                                     const newStatus = e.target.value as any;
+                                                     setOrders(prev => prev.map(o => o.id === order.id ? {...o, status: newStatus} : o));
+                                                   }}
+                                                   className={cn(
+                                                     "text-[10px] font-black uppercase px-3 py-2 rounded-lg border focus:ring-2 outline-none transition-all cursor-pointer",
+                                                     order.status === 'pending' ? "bg-orange-50 text-orange-600 border-orange-100" :
+                                                     order.status === 'processing' ? "bg-blue-50 text-blue-600 border-blue-100" :
+                                                     order.status === 'shipped' ? "bg-purple-50 text-purple-600 border-purple-100" :
+                                                     "bg-green-50 text-green-600 border-green-100"
+                                                   )}
+                                                 >
+                                                   <option value="pending">Pending</option>
+                                                   <option value="processing">Processing</option>
+                                                   <option value="shipped">Shipped</option>
+                                                   <option value="delivered">Delivered</option>
+                                                 </select>
+                                                 <span className="font-black text-lg text-gray-900">{formatPrice(order.total)}</span>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                                            <div className="space-y-3">
-                                                <h5 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Customer Information</h5>
-                                                <div className="space-y-1">
-                                                    <p className="font-bold text-gray-800">{order.customer.name}</p>
-                                                    <p className="text-gray-500">{order.customer.phone}</p>
-                                                    <p className="text-gray-500">{order.customer.address}</p>
-                                                    <p className="text-gray-400 italic text-[10px] uppercase font-bold tracking-widest">Via {order.paymentMethod.toUpperCase()}</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+                                            <div className="space-y-4 bg-gray-50 p-4 rounded-xl">
+                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                                                    <Users size={14} className="text-orange-500" />
+                                                    Customer Info
                                                 </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <h5 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Line Items ({order.items.length})</h5>
                                                 <div className="space-y-2">
-                                                    {order.items.map((item, idx) => (
-                                                        <div key={idx} className="flex justify-between items-center text-xs">
-                                                            <span className="text-gray-600 font-medium">{item.name} <span className="text-gray-400">x{item.quantity}</span></span>
-                                                            <span className="font-bold">{formatPrice(item.price * item.quantity)}</span>
-                                                        </div>
-                                                    ))}
+                                                    <div className="space-y-0.5">
+                                                        <p className="text-[10px] uppercase text-gray-400 font-bold">Name</p>
+                                                        <p className="font-bold text-gray-800 text-sm">{order.customer.name}</p>
+                                                    </div>
+                                                    <div className="space-y-0.5">
+                                                        <p className="text-[10px] uppercase text-gray-400 font-bold">Contact</p>
+                                                        <p className="text-gray-700 font-medium">{order.customer.phone}</p>
+                                                    </div>
+                                                    <div className="space-y-0.5">
+                                                        <p className="text-[10px] uppercase text-gray-400 font-bold">Shipping Address</p>
+                                                        <p className="text-gray-600 text-xs leading-relaxed">{order.customer.address}</p>
+                                                    </div>
+                                                    <div className="pt-2">
+                                                        <span className="text-[9px] bg-gray-200 text-gray-600 font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                                            Method: {order.paymentMethod === 'cod' ? 'Cash On Delivery' : order.paymentMethod.toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="md:col-span-2 space-y-4">
+                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                                                    <ShoppingCart size={14} className="text-orange-500" />
+                                                    Order Items ({order.items.length})
+                                                </div>
+                                                <div className="border border-gray-100 rounded-xl overflow-hidden">
+                                                    <table className="w-full text-xs text-left">
+                                                        <thead className="bg-gray-50 text-gray-400">
+                                                            <tr>
+                                                                <th className="px-4 py-2 font-bold uppercase">Item</th>
+                                                                <th className="px-4 py-2 font-bold uppercase text-center">Qty</th>
+                                                                <th className="px-4 py-2 font-bold uppercase text-right">Unit</th>
+                                                                <th className="px-4 py-2 font-bold uppercase text-right">Total</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-gray-50">
+                                                            {order.items.map((item, idx) => (
+                                                                <tr key={idx} className="bg-white">
+                                                                    <td className="px-4 py-3 font-bold text-gray-800">{item.name}</td>
+                                                                    <td className="px-4 py-3 text-center">{item.quantity}</td>
+                                                                    <td className="px-4 py-3 text-right">{formatPrice(item.price)}</td>
+                                                                    <td className="px-4 py-3 text-right font-black">{formatPrice(item.price * item.quantity)}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="mt-6 flex gap-2">
-                                            <button className="grow py-2 bg-gray-900 text-white rounded-lg text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2">
-                                                <CheckCircle size={14} /> Mark as Delivered
+                                        <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                                            <button 
+                                                onClick={() => {
+                                                  if (window.confirm('Mark this order as delivered?')) {
+                                                    setOrders(prev => prev.map(o => o.id === order.id ? {...o, status: 'delivered'} : o));
+                                                  }
+                                                }}
+                                                className="grow py-3 bg-gray-900 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-500 hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300"
+                                            >
+                                                <CheckCircle size={16} /> Update Fulfillment Status
                                             </button>
                                             <button 
                                                 onClick={() => generateInvoice(order)}
-                                                className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-gray-200"
+                                                className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-gray-200"
                                             >
-                                                <Printer size={14} /> Invoice PDF
+                                                <Printer size={16} /> Export Invoice PDF
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                  if(window.confirm('Permanently delete this order record?')) {
+                                                    setOrders(prev => prev.filter(o => o.id !== order.id));
+                                                  }
+                                                }}
+                                                className="px-6 py-3 bg-red-50 text-red-500 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-red-100"
+                                            >
+                                                <Trash2 size={16} />
                                             </button>
                                         </div>
                                     </div>

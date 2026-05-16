@@ -13,6 +13,7 @@ interface AppContextType {
   settings: SiteSettings;
   updateSettings: (newSettings: SiteSettings) => void;
   orders: Order[];
+  setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   addOrder: (order: Order) => void;
   getOrderById: (id: string) => Order | undefined;
   wishlist: Product[];
@@ -28,6 +29,17 @@ interface AppContextType {
   logout: () => void;
   analytics: SiteAnalytics;
   incrementView: (productId: string) => void;
+  checkoutDrawerOpen: boolean;
+  setCheckoutDrawerOpen: (open: boolean) => void;
+  selectedProductForCheckout: Product | null;
+  setSelectedProductForCheckout: (product: Product | null) => void;
+  openCheckout: (product: Product) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  isSettingsOpen: boolean;
+  setIsSettingsOpen: (open: boolean) => void;
+  isMenuOpen: boolean;
+  setIsMenuOpen: (open: boolean) => void;
 }
 
 const INITIAL_ANALYTICS: SiteAnalytics = {
@@ -111,6 +123,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return localStorage.getItem('sm_isAdmin') === 'true';
   });
 
+  const [checkoutDrawerOpen, setCheckoutDrawerOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [selectedProductForCheckout, setSelectedProductForCheckout] = useState<Product | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const openCheckout = (product: Product) => {
+    setSelectedProductForCheckout(product);
+    setCheckoutDrawerOpen(true);
+  };
+
   useEffect(() => {
     localStorage.setItem('sm_products', JSON.stringify(products));
   }, [products]);
@@ -121,6 +144,113 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem('sm_settings', JSON.stringify(settings));
+    
+    // Apply Customization Settings via CSS Variables
+    if (settings.customization) {
+      const root = document.documentElement;
+      const c = settings.customization;
+      
+      // Colors
+      if (c.colors) {
+        root.style.setProperty('--primary-color', c.colors.primary || settings.primaryColor);
+        root.style.setProperty('--secondary-color', c.colors.secondary || '#4F46E5');
+        root.style.setProperty('--accent-color', c.colors.accent || '#F59E0B');
+        root.style.setProperty('--bg-color', c.colors.background || '#FFFFFF');
+        root.style.setProperty('--text-main', c.colors.textMain || '#374151');
+        root.style.setProperty('--text-headings', c.colors.textHeadings || '#111827');
+        root.style.setProperty('--header-bg', c.colors.headerBg || '#FFFFFF');
+        root.style.setProperty('--header-text', c.colors.headerText || '#111827');
+        root.style.setProperty('--footer-bg', c.colors.footerBg || '#111827');
+        root.style.setProperty('--footer-text', c.colors.footerText || '#FFFFFF');
+        root.style.setProperty('--btn-primary-bg', c.colors.btnPrimaryBg || settings.primaryColor);
+        root.style.setProperty('--btn-secondary-bg', c.colors.btnSecondaryBg || '#4F46E5');
+        root.style.setProperty('--btn-text', c.colors.btnText || '#FFFFFF');
+        root.style.setProperty('--card-bg', c.colors.cardBg || '#FFFFFF');
+        root.style.setProperty('--card-border', c.colors.cardBorder || '#F3F4F6');
+        root.style.setProperty('--price-color', c.colors.priceColor || settings.primaryColor);
+        root.style.setProperty('--discount-badge', c.colors.discountBadge || '#EF4444');
+        root.style.setProperty('--timer-bg', c.colors.timerBg || '#FEF2F2');
+        root.style.setProperty('--timer-text', c.colors.timerText || '#EF4444');
+        root.style.setProperty('--category-tab-bg', c.colors.categoryTabBg || '#F3F4F6');
+        root.style.setProperty('--category-tab-active-bg', c.colors.categoryTabActiveBg || settings.primaryColor);
+        root.style.setProperty('--cart-icon-color', c.colors.cartIcon || settings.primaryColor);
+        root.style.setProperty('--whatsapp-btn-color', c.colors.whatsappBtn || '#25D366');
+      }
+      
+      // Fonts
+      if (c.fonts) {
+        root.style.setProperty('--heading-font', c.fonts.heading || 'Inter');
+        root.style.setProperty('--body-font', c.fonts.body || 'Inter');
+        root.style.setProperty('--btn-font', c.fonts.button || 'Inter');
+        root.style.setProperty('--price-font', c.fonts.price || 'Inter');
+        
+        // Font Sizes
+        if (c.fonts.sizes) {
+          root.style.setProperty('--h1-size', `${c.fonts.sizes.heading1 || 48}px`);
+          root.style.setProperty('--h2-size', `${c.fonts.sizes.heading2 || 36}px`);
+          root.style.setProperty('--h3-size', `${c.fonts.sizes.heading3 || 24}px`);
+          root.style.setProperty('--body-size', `${c.fonts.sizes.body || 16}px`);
+          root.style.setProperty('--btn-size', `${c.fonts.sizes.button || 16}px`);
+          root.style.setProperty('--price-size', `${c.fonts.sizes.price || 18}px`);
+          root.style.setProperty('--menu-size', `${c.fonts.sizes.menu || 14}px`);
+          root.style.setProperty('--product-title-size', `${c.fonts.sizes.productTitle || 16}px`);
+        }
+        
+        // Font Weights
+        if (c.fonts.weights) {
+          root.style.setProperty('--heading-weight', c.fonts.weights.heading || '900');
+          root.style.setProperty('--body-weight', c.fonts.weights.body || '400');
+        }
+
+        // Others
+        root.style.setProperty('--line-height', c.fonts.lineHeight?.toString() || '1.5');
+        root.style.setProperty('--letter-spacing', `${c.fonts.letterSpacing || 0}px`);
+      }
+      
+      // Layout
+      if (c.layout) {
+        root.style.setProperty('--image-height', `${c.layout.imageHeight || 300}px`);
+        root.style.setProperty('--product-spacing', `${c.layout.productSpacing || 24}px`);
+        root.style.setProperty('--container-padding', `${c.layout.containerPadding || 16}px`);
+        root.style.setProperty('--border-radius', `${c.layout.borderRadius || 16}px`);
+        root.style.setProperty('--btn-radius', `${c.layout.buttonRadius || 12}px`);
+        root.style.setProperty('--header-height', `${c.layout.headerHeight || 80}px`);
+        root.style.setProperty('--footer-height', `${c.layout.footerHeight || 400}px`);
+        root.style.setProperty('--grid-cols', (c.layout.gridColumns || 4).toString());
+        root.style.setProperty('--hero-padding', `${c.layout.heroPadding || 40}px`);
+        root.style.setProperty('--card-gap', `${c.layout.cardGap || 24}px`);
+        root.style.setProperty('--grid-gap', `${c.layout.cardGap || 24}px`);
+        root.style.setProperty('--prod-img-height', `${c.layout.productImageHeight || 300}px`);
+        root.style.setProperty('--img-container-height', `${c.layout.productImageHeight || 300}px`);
+        root.style.setProperty('--prod-img-aspect-ratio', c.layout.productImageAspectRatio || '1/1');
+        root.style.setProperty('--prod-img-fit', c.layout.productImageFit || 'cover');
+      }
+
+      // Dark Mode
+      if (c.darkMode) {
+        document.body.classList.add('dark');
+        root.style.setProperty('--bg-color', c.colors.background || '#111827');
+        root.style.setProperty('--text-main', c.colors.textMain || '#F3F4F6');
+        root.style.setProperty('--text-headings', c.colors.textHeadings || '#FFFFFF');
+        root.style.setProperty('--card-bg', c.colors.cardBg || '#1F2937');
+        root.style.setProperty('--card-border', c.colors.cardBorder || '#374151');
+      } else {
+        document.body.classList.remove('dark');
+      }
+
+      // Custom CSS
+      let styleTag = document.getElementById('custom-site-css');
+      if (c.advanced?.customCss) {
+        if (!styleTag) {
+          styleTag = document.createElement('style');
+          styleTag.id = 'custom-site-css';
+          document.head.appendChild(styleTag);
+        }
+        styleTag.innerHTML = c.advanced.customCss;
+      } else if (styleTag) {
+        styleTag.remove();
+      }
+    }
   }, [settings]);
 
   useEffect(() => {
@@ -215,7 +345,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const isInWishlist = (productId: string) => wishlist.some(p => p.id === productId);
 
   const login = (email: string, pass: string) => {
-    if (email === 'tamgedislam69@gmail.com' && pass === 't112233t') {
+    const adminEmail = settings.security?.adminEmail || 'tamgedislam69@gmail.com';
+    const adminPass = settings.security?.adminPassword || 't112233t';
+    
+    if (email === adminEmail && pass === adminPass) {
       setIsAdmin(true);
       return true;
     }
@@ -229,12 +362,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       products, setProducts,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart,
       settings, updateSettings,
-      orders, addOrder, getOrderById,
+      orders, setOrders, addOrder, getOrderById,
       wishlist, addToWishlist, removeFromWishlist, isInWishlist,
       media, setMedia,
       posts, setPosts,
       isAdmin, login, logout,
-      analytics, incrementView
+      analytics, incrementView,
+      checkoutDrawerOpen, setCheckoutDrawerOpen,
+      isSettingsOpen, setIsSettingsOpen,
+      isMenuOpen, setIsMenuOpen,
+      selectedProductForCheckout, setSelectedProductForCheckout,
+      searchQuery, setSearchQuery,
+      openCheckout
     }}>
       {children}
     </AppContext.Provider>

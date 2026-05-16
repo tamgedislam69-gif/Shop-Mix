@@ -10,8 +10,13 @@ const FloatingCart: React.FC = () => {
     const { cart, removeFromCart, updateCartQuantity, settings } = useApp();
     const navigate = useNavigate();
     
+    if (settings.customization?.visibility?.cartFloat === false) return null;
+
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    const c = settings.customization?.colors;
+    const l = settings.customization?.layout;
 
     if (count === 0) return null;
 
@@ -24,6 +29,7 @@ const FloatingCart: React.FC = () => {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
                         className="absolute bottom-20 right-0 w-[320px] glass rounded-[2.5rem] shadow-2xl p-6 overflow-hidden"
+                        style={{ borderRadius: `${l?.borderRadius || 40}px` }}
                     >
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-sm font-black uppercase tracking-widest">Your Mix Bag</h3>
@@ -70,8 +76,11 @@ const FloatingCart: React.FC = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-16 h-16 rounded-full bg-gray-900 text-white shadow-2xl flex items-center justify-center relative"
-                style={{ backgroundColor: settings.primaryColor }}
+                className="w-16 h-16 rounded-full text-white shadow-2xl flex items-center justify-center relative"
+                style={{ 
+                    backgroundColor: c?.primary || settings.primaryColor,
+                    borderRadius: `${l?.buttonRadius || 32}px`
+                }}
             >
                 <ShoppingCart size={24} />
                 <span className="absolute -top-1 -right-1 w-6 h-6 bg-white text-gray-900 rounded-full text-[10px] font-black flex items-center justify-center border-2 border-primary" style={{ borderColor: settings.primaryColor }}>

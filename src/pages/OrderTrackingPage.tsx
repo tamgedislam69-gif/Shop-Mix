@@ -3,12 +3,17 @@ import { useApp } from '../context/AppContext';
 import { Search, Package, MapPin, Truck, CheckCircle, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatPrice, cn } from '../lib/utils';
+import { useTranslate } from '../hooks/useTranslate';
 
 const OrderTrackingPage: React.FC = () => {
   const [orderId, setOrderId] = useState('');
   const { getOrderById, settings } = useApp();
+  const { t } = useTranslate();
   const [trackedOrder, setTrackedOrder] = useState<any>(null);
   const [error, setError] = useState('');
+
+  const c = settings.customization?.colors;
+  const l = settings.customization?.layout;
 
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,15 +23,15 @@ const OrderTrackingPage: React.FC = () => {
       setError('');
     } else {
       setTrackedOrder(null);
-      setError('Order not found. Please check the ID and try again.');
+      setError(t('অর্ডার খুঁজে পাওয়া যায়নি। দয়া করে আইডি চেক করে আবার চেষ্টা করুন।', 'Order not found. Please check the ID and try again.'));
     }
   };
 
   const steps = [
-    { label: 'Order Placed', status: 'pending', icon: Clock },
-    { label: 'Processing', status: 'processing', icon: Package },
-    { label: 'Shipped', status: 'shipped', icon: Truck },
-    { label: 'Delivered', status: 'delivered', icon: CheckCircle },
+    { label: t('অর্ডারের স্থান', 'Order Placed'), status: 'pending', icon: Clock },
+    { label: t('প্রসেসিং হচ্ছে', 'Processing'), status: 'processing', icon: Package },
+    { label: t('শিপড হয়েছে', 'Shipped'), status: 'shipped', icon: Truck },
+    { label: t('ডেলিভারি সম্পন্ন', 'Delivered'), status: 'delivered', icon: CheckCircle },
   ];
 
   const currentStepIndex = trackedOrder ? steps.findIndex(s => s.status === trackedOrder.status) : -1;
@@ -40,8 +45,8 @@ const OrderTrackingPage: React.FC = () => {
     >
       <div className="max-w-3xl mx-auto text-center space-y-8">
         <div className="space-y-3">
-          <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tight">Track Your Order</h1>
-          <p className="text-gray-500">Enter your order ID below to see the current status of your package.</p>
+          <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tight">{t('আপনার অর্ডার ট্র্যাক করুন', 'Track Your Order')}</h1>
+          <p className="text-gray-500">{t('আপনার প্যাকেজের বর্তমান অবস্থা দেখতে নিচে আপনার অর্ডার আইডি লিখুন।', 'Enter your order ID below to see the current status of your package.')}</p>
         </div>
 
         <form onSubmit={handleTrack} className="flex gap-2 max-w-lg mx-auto">
@@ -49,19 +54,25 @@ const OrderTrackingPage: React.FC = () => {
              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
              <input
                type="text"
-               placeholder="Order ID (e.g. ORDER-123456)"
-               className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary shadow-sm"
+               placeholder={t('অর্ডার আইডি (যেমন: ORDER-123456)', 'Order ID (e.g. ORDER-123456)')}
+               className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 outline-none focus:ring-2 shadow-sm"
                value={orderId}
                onChange={(e) => setOrderId(e.target.value)}
-               style={{ focusRingColor: settings.primaryColor }}
+               style={{ 
+                 borderRadius: `${l?.borderRadius || 12}px`,
+                 '--tw-ring-color': c?.primary || settings.primaryColor
+               } as any}
              />
           </div>
           <button 
             type="submit"
-            className="px-8 py-4 text-white font-black uppercase tracking-widest rounded-xl shadow-lg transition-transform active:scale-95"
-            style={{ backgroundColor: settings.primaryColor }}
+            className="px-8 py-4 text-white font-black uppercase tracking-widest shadow-lg transition-transform active:scale-95"
+            style={{ 
+              backgroundColor: c?.primary || settings.primaryColor,
+              borderRadius: `${l?.buttonRadius || 12}px`
+            }}
           >
-            Track
+            {t('ট্র্যাক', 'Track')}
           </button>
         </form>
 
@@ -82,17 +93,21 @@ const OrderTrackingPage: React.FC = () => {
               key={trackedOrder.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-12 bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden text-left"
+              className="mt-12 bg-white border border-gray-100 shadow-xl overflow-hidden text-left"
+              style={{ borderRadius: `${l?.borderRadius || 24}px` }}
             >
               {/* Order Header */}
-              <div className="p-8 bg-gray-900 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div 
+                className="p-8 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+                style={{ backgroundColor: c?.btnPrimaryBg || '#111827' }}
+              >
                 <div>
-                  <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Tracking Order</h3>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">{t('ট্র্যাকিং অর্ডার', 'Tracking Order')}</h3>
                   <p className="text-xl font-black">{trackedOrder.id}</p>
                 </div>
                 <div className="text-right">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Expected Delivery</h3>
-                  <p className="text-xl font-black">Within 48 Hours</p>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">{t('ডেলিভারি সম্ভাব্য তারিখ', 'Expected Delivery')}</h3>
+                  <p className="text-xl font-black">{t('৪৮ ঘণ্টার মধ্যে', 'Within 48 Hours')}</p>
                 </div>
               </div>
 
@@ -105,7 +120,7 @@ const OrderTrackingPage: React.FC = () => {
                    <div 
                     className="absolute top-6 left-0 h-1 transition-all duration-1000 -z-0" 
                     style={{ 
-                      backgroundColor: settings.primaryColor,
+                      backgroundColor: c?.primary || settings.primaryColor,
                       width: `${(currentStepIndex / (steps.length - 1)) * 100}%` 
                     }} 
                    />
@@ -121,11 +136,11 @@ const OrderTrackingPage: React.FC = () => {
                             className={cn(
                               "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500",
                               isCompleted ? "text-white shadow-lg" : "bg-white text-gray-300 border-2 border-gray-100",
-                              isCurrent && "scale-110 ring-4 ring-primary/20"
                             )}
                             style={{ 
-                              backgroundColor: isCompleted ? settings.primaryColor : undefined,
-                              borderColor: isCurrent ? settings.primaryColor : undefined
+                              backgroundColor: isCompleted ? (c?.primary || settings.primaryColor) : undefined,
+                              borderColor: isCurrent ? (c?.primary || settings.primaryColor) : undefined,
+                              boxShadow: isCurrent ? `0 0 0 4px ${c?.primary || settings.primaryColor}33` : undefined
                             }}
                            >
                              <Icon size={20} />
@@ -146,7 +161,7 @@ const OrderTrackingPage: React.FC = () => {
                    <div className="space-y-4">
                       <div className="flex items-center gap-2 text-gray-400">
                          <MapPin size={16} />
-                         <span className="text-[10px] font-black uppercase tracking-widest">Delivery Address</span>
+                         <span className="text-[10px] font-black uppercase tracking-widest">{t('ডেলিভারি ঠিকানা', 'Delivery Address')}</span>
                       </div>
                       <div className="space-y-1">
                          <p className="font-black text-gray-900">{trackedOrder.customer.name}</p>
@@ -158,7 +173,7 @@ const OrderTrackingPage: React.FC = () => {
                    <div className="space-y-4">
                       <div className="flex items-center gap-2 text-gray-400">
                          <Package size={16} />
-                         <span className="text-[10px] font-black uppercase tracking-widest">Order Summary</span>
+                         <span className="text-[10px] font-black uppercase tracking-widest">{t('অর্ডার সারসংক্ষেপ', 'Order Summary')}</span>
                       </div>
                       <div className="space-y-2">
                          {trackedOrder.items.map((item: any, idx: number) => (
@@ -168,8 +183,8 @@ const OrderTrackingPage: React.FC = () => {
                            </div>
                          ))}
                          <div className="pt-2 border-t border-dashed border-gray-100 flex justify-between">
-                            <span className="font-black uppercase text-[10px]">Total Paid</span>
-                            <span className="font-black text-primary" style={{ color: settings.primaryColor }}>{formatPrice(trackedOrder.total)}</span>
+                            <span className="font-black uppercase text-[10px]">{t('সর্বমোট প্রদেয়', 'Total Paid')}</span>
+                            <span className="font-black" style={{ color: c?.primary || settings.primaryColor }}>{formatPrice(trackedOrder.total)}</span>
                          </div>
                       </div>
                    </div>

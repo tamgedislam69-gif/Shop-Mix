@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Star, ShieldCheck, Truck, RefreshCcw, Minus, Plus, Heart, Share2, Facebook, Twitter, Link as LinkIcon, XCircle } from 'lucide-react';
+import { Star, ShieldCheck, Truck, RefreshCcw, Minus, Plus, Heart, Share2, Facebook, Twitter, Link as LinkIcon, XCircle, Users, ShoppingCart, ShoppingBag } from 'lucide-react';
 import { formatPrice, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-
 import { Helmet } from 'react-helmet-async';
+import { useTranslate } from '../hooks/useTranslate';
 
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { products, setProducts, addToCart, settings, addToWishlist, removeFromWishlist, isInWishlist, incrementView } = useApp();
+  const { products, setProducts, addToCart, settings, addToWishlist, removeFromWishlist, isInWishlist, incrementView, openCheckout } = useApp();
+  const { t } = useTranslate();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,9 @@ const ProductPage: React.FC = () => {
 
   const product = products.find(p => p.id === id);
   const isFavorite = product ? isInWishlist(product.id) : false;
+  const c = settings.customization?.colors;
+  const v = settings.customization?.visibility;
+  const l = settings.customization?.layout;
 
   useEffect(() => {
     // Track product view
@@ -35,8 +39,14 @@ const ProductPage: React.FC = () => {
     if (product) {
       setSelectedImage(product.image);
       if (product.variants) {
-          if (product.variants.colors.length > 0) setSelectedColor(product.variants.colors[0].name);
-          if (product.variants.sizes.length > 0) setSelectedSize(product.variants.sizes[0].name);
+          if (product.enableColors && product.variants.colors.length > 0) {
+              const colors = product.variants.colors[0].name.split(',').map(s => s.trim()).filter(Boolean);
+              if (colors.length > 0) setSelectedColor(colors[0]);
+          }
+          if (product.enableSizes && product.variants.sizes.length > 0) {
+              const sizes = product.variants.sizes[0].name.split(',').map(s => s.trim()).filter(Boolean);
+              if (sizes.length > 0) setSelectedSize(sizes[0]);
+          }
       }
     }
     return () => clearTimeout(timer);
@@ -80,8 +90,8 @@ const ProductPage: React.FC = () => {
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
-        <h2 className="text-2xl font-bold">Product Not Found</h2>
-        <button onClick={() => navigate('/')} className="text-primary font-bold mt-4">Back to home</button>
+        <h2 className="text-2xl font-bold">{t('পণ্যটি পাওয়া যায়নি', 'Product Not Found')}</h2>
+        <button onClick={() => navigate('/')} className="text-primary font-bold mt-4">{t('হোমে ফিরে যান', 'Back to home')}</button>
       </div>
     );
   }
@@ -98,33 +108,45 @@ const ProductPage: React.FC = () => {
       className="container mx-auto px-4 py-8"
     >
       <Helmet>
-        <title>{`${product.name} | Shop Mix BD`}</title>
+        <title>{`${product.name} | ${settings.customization?.text?.websiteName || settings.websiteName}`}</title>
         <meta name="description" content={product.description} />
-        <meta property="og:title" content={`${product.name} - Shop Mix BD`} />
-        <meta property="og:description" content={product.description} />
-        <meta property="og:image" content={product.image} />
-        <meta property="og:type" content="product" />
-        <meta property="product:price:amount" content={product.price.toString()} />
-        <meta property="product:price:currency" content="BDT" />
       </Helmet>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div 
+        className="bg-white shadow-2xl border border-gray-100 p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-16"
+        style={{ borderRadius: `${l?.borderRadius || 24}px` }}
+      >
         {/* Gallery */}
-        <div className="space-y-4">
-          <div className="aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center relative">
-            <motion.img 
-              key={selectedImage}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              src={selectedImage} 
-              alt={product.name} 
-              className="w-full h-full object-cover" 
-              referrerPolicy="no-referrer"
-            />
-            {discount > 0 && (
+        <div className="space-y-6">
+          <div 
+            className="aspect-square overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center relative shadow-xl group"
+            style={{ borderRadius: `${l?.borderRadius || 32}px` }}
+          >
+             {product.videoUrl ? (
+                <video 
+                  src={product.videoUrl} 
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+              ) : (
+                <motion.img 
+                  key={selectedImage}
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  src={selectedImage} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                  referrerPolicy="no-referrer"
+                />
+              )}
+            {discount > 0 && v?.discountBadges !== false && (
               <div 
-                className="absolute top-4 left-4 text-white text-xs font-bold px-3 py-1 rounded bg-red-600 shadow-md"
+                className="absolute top-6 left-6 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl shadow-2xl tracking-[0.1em] uppercase"
+                style={{ backgroundColor: c?.primary || settings.primaryColor }}
               >
-                FLASH SALE {discount}% OFF
+                SPECIAL {discount}% OFF
               </div>
             )}
           </div>
@@ -134,10 +156,10 @@ const ProductPage: React.FC = () => {
                     key={i}
                     onClick={() => setSelectedImage(img)}
                     className={cn(
-                        "w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
-                        selectedImage === img ? "border-primary shadow-md" : "border-gray-100 opacity-60 hover:opacity-100"
+                        "w-24 h-24 rounded-2xl overflow-hidden border-4 transition-all duration-300 transform",
+                        selectedImage === img ? "shadow-xl scale-105" : "border-gray-50 opacity-50 hover:opacity-100 hover:border-primary/30"
                     )}
-                    style={{ borderColor: selectedImage === img ? settings.primaryColor : undefined }}
+                    style={selectedImage === img ? { borderColor: c?.primary || settings.primaryColor } : {}}
                    >
                        <img src={img} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                    </button>
@@ -147,175 +169,198 @@ const ProductPage: React.FC = () => {
 
         {/* Info */}
         <div className="flex flex-col">
-          <div className="space-y-4 pb-6 border-b border-gray-100">
-            <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 leading-tight">
+          <div className="space-y-6 pb-8 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+                <span className="px-3 py-1 bg-orange-50 text-primary text-[10px] font-black uppercase tracking-widest rounded-lg" style={{ color: c?.primary || settings.primaryColor }}>Official Store</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('ক্যাটাগরি', 'Category')}: {product.category}</span>
+            </div>
+            <h1 
+              className="text-3xl md:text-5xl font-black tracking-tighter leading-[1.1]"
+              style={{ 
+                color: c?.textHeadings || '#1a1a1a',
+                fontSize: `${settings.customization?.fonts?.sizes?.productTitle || 36}px`
+              }}
+            >
                 {product.name}
             </h1>
-            <div className="flex items-center gap-6">
-                <div className="flex items-center gap-1">
-                    <Star size={16} className="fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-bold">{product.rating.toFixed(1)}</span>
+            <div className="flex items-center gap-8">
+                {v?.starRatings !== false && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                            <Star key={i} size={14} className={cn(i < Math.floor(product.rating) ? "fill-orange-400 text-orange-400" : "text-gray-200")} />
+                        ))}
+                    </div>
+                    <span className="text-xs font-black text-[#1a1a1a]">{product.rating.toFixed(1)}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                    <Users size={14} style={{ color: c?.primary || settings.primaryColor }} />
+                    {product.views || 0} {t('জন দেখছেন', 'People Watching')}
                 </div>
-                <span className="text-sm text-blue-600 hover:underline cursor-pointer">{product.reviews.length} Ratings</span>
-                <span className="text-sm text-gray-400">|</span>
-                <span className="text-sm text-gray-500">{product.views || 0} Views</span>
             </div>
           </div>
 
           {/* Variants Selectors */}
           {product.variants && (
-              <div className="py-6 space-y-6 border-b border-gray-100">
-                  {product.variants.colors.length > 0 && (
-                      <div className="space-y-3">
-                          <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Select Color</label>
-                          <div className="flex gap-2">
-                              {product.variants.colors.map(c => (
-                                  <button
-                                      key={c.id}
-                                      onClick={() => setSelectedColor(c.name)}
-                                      className={cn(
-                                          "px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all",
-                                          selectedColor === c.name ? "border-primary bg-primary/5" : "border-gray-100 text-gray-400"
-                                      )}
-                                      style={{ borderColor: selectedColor === c.name ? settings.primaryColor : undefined, color: selectedColor === c.name ? settings.primaryColor : undefined }}
-                                  >
-                                      {c.name} {c.priceModifier !== 0 && `(${c.priceModifier > 0 ? '+' : ''}${c.priceModifier})`}
-                                  </button>
-                              ))}
+              <div className="py-8 space-y-8 border-b border-gray-100">
+                  {product.enableColors && product.variants?.colors && product.variants.colors.length > 0 && (
+                      <div className="space-y-4">
+                          <div className="text-base font-semibold text-[#1a1a1a] flex items-center gap-2">
+                              {t('কালার সিলেক্ট করুন', 'Select Color')} <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: c?.primary || settings.primaryColor }}></div>
+                          </div>
+                          <div className="flex flex-wrap gap-3">
+                              {product.variants.colors.map(colorGroup => {
+                                  const individualColors = colorGroup.name.split(',').map(s => s.trim()).filter(Boolean);
+                                  return individualColors.map(colorName => (
+                                      <button
+                                          key={`${colorGroup.id}-${colorName}`}
+                                          onClick={() => setSelectedColor(colorName)}
+                                          className={cn(
+                                              "px-6 py-3 rounded-xl text-sm font-medium uppercase border transition-all duration-200",
+                                              selectedColor === colorName 
+                                                ? "text-white scale-[1.02] shadow-lg" 
+                                                : "bg-[#1a1a1a] text-white border-[#333] hover:border-primary"
+                                          )}
+                                          style={selectedColor === colorName ? { backgroundColor: c?.primary || settings.primaryColor, borderColor: c?.primary || settings.primaryColor } : {}}
+                                      >
+                                          {colorName}
+                                      </button>
+                                  ));
+                              })}
                           </div>
                       </div>
                   )}
-                  {product.variants.sizes.length > 0 && (
-                      <div className="space-y-3">
-                          <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Select Size</label>
-                          <div className="flex gap-2">
-                              {product.variants.sizes.map(s => (
-                                  <button
-                                      key={s.id}
-                                      onClick={() => setSelectedSize(s.name)}
-                                      className={cn(
-                                          "px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all",
-                                          selectedSize === s.name ? "border-primary bg-primary/5" : "border-gray-100 text-gray-400"
-                                      )}
-                                      style={{ borderColor: selectedSize === s.name ? settings.primaryColor : undefined, color: selectedSize === s.name ? settings.primaryColor : undefined }}
-                                  >
-                                      {s.name} {s.priceModifier !== 0 && `(${s.priceModifier > 0 ? '+' : ''}${s.priceModifier})`}
-                                  </button>
-                              ))}
+                  {product.enableSizes && product.variants?.sizes && product.variants.sizes.length > 0 && (
+                      <div className="space-y-4">
+                          <div className="text-base font-semibold text-[#1a1a1a] flex items-center gap-2">
+                              {t('সাইজ সিলেক্ট করুন', 'Select Size')} <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: c?.primary || settings.primaryColor }}></div>
+                          </div>
+                          <div className="flex flex-wrap gap-3">
+                              {product.variants.sizes.map(sizeGroup => {
+                                  const individualSizes = sizeGroup.name.split(',').map(s => s.trim()).filter(Boolean);
+                                  return individualSizes.map(sizeName => (
+                                      <button
+                                          key={`${sizeGroup.id}-${sizeName}`}
+                                          onClick={() => setSelectedSize(sizeName)}
+                                          className={cn(
+                                              "px-6 py-3 rounded-xl text-sm font-medium uppercase border transition-all duration-200",
+                                              selectedSize === sizeName 
+                                                ? "text-white scale-[1.02] shadow-lg" 
+                                                : "bg-[#1a1a1a] text-white border-[#333] hover:border-primary"
+                                          )}
+                                          style={selectedSize === sizeName ? { backgroundColor: c?.primary || settings.primaryColor, borderColor: c?.primary || settings.primaryColor } : {}}
+                                      >
+                                          {sizeName}
+                                      </button>
+                                  ));
+                              })}
                           </div>
                       </div>
                   )}
               </div>
           )}
 
-          <div className="py-6 space-y-4 border-b border-gray-100">
-               <div className="flex items-baseline gap-4">
-                    <span className="text-3xl md:text-4xl font-black text-primary" style={{ color: settings.primaryColor }}>
-                        {formatPrice(product.price)}
-                    </span>
-                    {product.originalPrice && (
-                        <div className="flex flex-col">
-                            <span className="text-sm text-gray-400 line-through">
-                                {formatPrice(product.originalPrice)}
+          <div className="py-8 space-y-8">
+               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="space-y-1">
+                        <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{t('স্পেশাল ডিসকাউন্ট মূল্য', 'Special Discount Price')}</span>
+                        <div className="flex items-baseline gap-4">
+                            <span 
+                              className="font-black tabular-nums tracking-tighter"
+                              style={{ 
+                                color: c?.priceColor || c?.primary || settings.primaryColor,
+                                fontSize: `${settings.customization?.fonts?.sizes?.price || 48}px`
+                              }}
+                            >
+                                {formatPrice(product.price)}
                             </span>
-                            <span className="text-xs font-bold text-gray-600">Saved {formatPrice(product.originalPrice - product.price)}</span>
+                            {product.originalPrice && (
+                                <span className="text-xl text-gray-400 line-through font-bold tabular-nums">
+                                    {formatPrice(product.originalPrice)}
+                                </span>
+                            )}
                         </div>
-                    )}
+                    </div>
+                    
+                    <div className="flex items-center gap-6 bg-gray-50 p-2 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="flex items-center">
+                            <button 
+                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 text-gray-400 hover:text-primary hover:border-primary transition-all"
+                                style={{ '--tw-text-opacity': 1, color: c?.primary || settings.primaryColor } as any}
+                                disabled={quantity <= 1}
+                            >
+                                <Minus size={18} />
+                            </button>
+                            <span className="w-14 text-center font-black text-xl tabular-nums text-[#1a1a1a]">{quantity}</span>
+                            <button 
+                                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                                className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 text-gray-400 hover:text-primary hover:border-primary transition-all"
+                                style={{ '--tw-text-opacity': 1, color: c?.primary || settings.primaryColor } as any}
+                            >
+                                <Plus size={18} />
+                            </button>
+                        </div>
+                    </div>
                </div>
-               
-               <div className="flex items-center gap-4 pt-4">
-                   <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
-                       <button 
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-                        disabled={quantity <= 1}
-                       >
-                           <Minus size={16} />
-                       </button>
-                       <span className="w-12 text-center font-bold">{quantity}</span>
-                       <button 
-                        onClick={() => setQuantity(quantity + 1)}
-                        className="p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-                       >
-                           <Plus size={16} />
-                       </button>
-                   </div>
-                   <span className="text-xs text-gray-500">Only {product.stock} items left in stock!</span>
+
+               {/* Action Buttons */}
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <motion.button 
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          if (product.source === 'alibaba' && product.affiliateLink) {
+                            window.open(product.affiliateLink, '_blank');
+                          } else {
+                            openCheckout(product);
+                          }
+                        }}
+                        className="w-full py-5 text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 relative overflow-hidden group"
+                        style={{ 
+                          backgroundColor: c?.primary || settings.primaryColor,
+                          borderRadius: `${l?.buttonRadius || 24}px`
+                        }}
+                    >
+                      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <span className="relative z-10">{settings.customization?.text?.confirmOrderBtn || t('অর্ডার করুন', 'Order Now')}</span>
+                      <ShoppingCart size={20} className="relative z-10 group-hover:scale-110 transition-transform" />
+                    </motion.button>
+                    <motion.button 
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => addToCart(product, quantity, selectedColor, selectedSize)}
+                        className="w-full py-5 text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 group"
+                        style={{ 
+                          backgroundColor: c?.btnPrimaryBg || '#1a1a1a',
+                          color: c?.btnPrimaryText || 'white',
+                          borderRadius: `${l?.buttonRadius || 24}px`
+                        }}
+                    >
+                      <span>{t('কার্টে যোগ করুন', 'Add to Cart')}</span>
+                      <ShoppingBag size={20} className="group-hover:translate-y-[-2px] transition-transform" />
+                    </motion.button>
                </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="py-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-               <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                    addToCart(product, quantity, selectedColor, selectedSize);
-                    navigate('/checkout');
-                }}
-                className="w-full font-black uppercase tracking-widest shadow-lg shadow-primary/20"
-                style={{ 
-                    backgroundColor: settings.buyButton.color,
-                    color: 'white',
-                    padding: settings.buyButton.padding,
-                    fontSize: settings.buyButton.fontSize,
-                    borderRadius: settings.buyButton.borderRadius
-                }}
-               >
-                 {settings.buyButton.text}
-               </motion.button>
-               <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => addToCart(product, quantity, selectedColor, selectedSize)}
-                className="w-full font-black uppercase tracking-widest border-2 transition-all hover:bg-gray-50"
-                style={{ 
-                    borderColor: settings.addToCartButton.color,
-                    color: settings.addToCartButton.color,
-                    padding: settings.addToCartButton.padding,
-                    fontSize: settings.addToCartButton.fontSize,
-                    borderRadius: settings.addToCartButton.borderRadius
-                }}
-               >
-                 {settings.addToCartButton.text}
-               </motion.button>
-          </div>
-
-          {/* Features */}
-          <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3">
-                  <ShieldCheck size={20} className="text-primary" style={{ color: settings.primaryColor }} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Genuine Product</span>
-              </div>
-              <div className="flex items-center gap-3">
-                  <Truck size={20} className="text-primary" style={{ color: settings.primaryColor }} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Free Delivery</span>
-              </div>
-              <div className="flex items-center gap-3">
-                  <RefreshCcw size={20} className="text-primary" style={{ color: settings.primaryColor }} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Easy Returns</span>
-              </div>
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-gray-100 flex items-center justify-between">
-               <div className="flex items-center gap-6">
-                   <button 
-                    onClick={() => isFavorite ? removeFromWishlist(product.id) : addToWishlist(product)}
-                    className={cn(
-                        "flex items-center gap-2 text-sm font-bold transition-colors",
-                        isFavorite ? "text-red-500" : "text-gray-500 hover:text-red-500"
-                    )}
-                   >
-                       <Heart size={18} className={isFavorite ? "fill-red-500" : ""} /> {isFavorite ? 'Saved in Wishlist' : 'Add to Wishlist'}
-                   </button>
-                   <div className="flex items-center gap-2">
-                       <span className="text-sm text-gray-400">Share:</span>
-                       <div className="flex gap-2">
-                           <button className="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100"><Facebook size={14} /></button>
-                           <button className="p-2 bg-sky-50 text-sky-500 rounded-full hover:bg-sky-100"><Twitter size={14} /></button>
-                           <button className="p-2 bg-gray-50 text-gray-600 rounded-full hover:bg-gray-100"><LinkIcon size={14} /></button>
-                       </div>
-                   </div>
+          {/* Delivery Note */}
+          <div 
+            className="p-6 bg-[#1a1a1a] border border-gray-800 shadow-xl relative overflow-hidden group"
+            style={{ borderRadius: `${l?.borderRadius || 32}px` }}
+          >
+               <div className="absolute top-0 right-0 w-32 h-32 opacity-10 blur-3xl -mr-16 -mt-16 group-hover:opacity-20 transition-colors duration-500" style={{ backgroundColor: c?.primary || settings.primaryColor }}></div>
+               <div className="relative z-10 flex items-center gap-6">
+                    <div 
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl"
+                      style={{ backgroundColor: c?.primary || settings.primaryColor }}
+                    >
+                        <Truck size={24} />
+                    </div>
+                    <div>
+                        <h4 className="text-white font-black text-xs uppercase tracking-widest mb-1">{t('সারা বাংলাদেশে দ্রুত ডেলিভারি', 'Fast Delivery Across BD')}</h4>
+                        <p className="text-gray-400 text-xs font-bold">{t('ঢাকা: ৭০ টাকা | ঢাকার বাইরে: ১২০ টাকা', 'Dhaka: 70 BDT | Outside: 120 BDT')}</p>
+                    </div>
                </div>
           </div>
         </div>

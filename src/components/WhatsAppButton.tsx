@@ -9,7 +9,9 @@ const WhatsAppButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   
-  const phoneNumber = '8801900000000'; // Replace with real number
+  if (settings.customization?.visibility?.whatsappFloat === false) return null;
+
+  const phoneNumber = settings.whatsappNumber || '8801900000000';
   
   // Get current product if on product page
   const productId = location.pathname.split('/product/')[1];

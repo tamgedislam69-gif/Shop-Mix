@@ -11,6 +11,8 @@ const Preloader: React.FC = () => {
         return () => clearTimeout(timer);
     }, []);
 
+    const websiteName = settings.customization?.text?.websiteName || settings.logoText || 'Shop Mix';
+
     return (
         <AnimatePresence>
             {isLoading && (
@@ -24,7 +26,7 @@ const Preloader: React.FC = () => {
                             animate={{ rotate: 360 }}
                             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                             className="w-24 h-24 rounded-full border-4 border-gray-100"
-                            style={{ borderTopColor: settings.primaryColor }}
+                            style={{ borderTopColor: settings.customization?.colors?.primary || settings.primaryColor }}
                         />
                         <motion.div 
                             initial={{ scale: 0.8, opacity: 0.5 }}
@@ -32,14 +34,14 @@ const Preloader: React.FC = () => {
                             transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
                             className="absolute inset-0 flex items-center justify-center"
                         >
-                            <span className="text-sm font-black uppercase tracking-tighter" style={{ color: settings.primaryColor }}>
-                                MIX
+                            <span className="text-sm font-black uppercase tracking-tighter" style={{ color: settings.customization?.colors?.primary || settings.primaryColor }}>
+                                {settings.customization?.text?.preloaderText || (websiteName.split(' ')[1] || 'MIX')}
                             </span>
                         </motion.div>
                     </div>
                     <div className="flex flex-col items-center">
-                        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-900">Shop Mix</h2>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Loading Perfection...</p>
+                        <h2 className="text-xl font-black uppercase tracking-[0.3em] text-gray-900">{websiteName}</h2>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{settings.customization?.text?.preloaderTagline || 'Loading Perfection...'}</p>
                     </div>
                 </motion.div>
             )}

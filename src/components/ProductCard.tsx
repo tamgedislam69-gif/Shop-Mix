@@ -5,16 +5,21 @@ import { Product } from '../types';
 import { useApp } from '../context/AppContext';
 import { formatPrice, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslate } from '../hooks/useTranslate';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart, settings, addToWishlist, removeFromWishlist, isInWishlist } = useApp();
+  const { addToCart, settings, addToWishlist, removeFromWishlist, isInWishlist, openCheckout } = useApp();
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslate();
 
   const isFavorite = isInWishlist(product.id);
+  const c = settings.customization?.colors;
+  const v = settings.customization?.visibility;
+  const l = settings.customization?.layout;
 
   const discount = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -32,89 +37,157 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <motion.div 
       whileHover={{ y: -5 }}
-      className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all group border border-transparent hover:border-gray-100"
+      className="product-card overflow-hidden shadow-sm hover:shadow-md transition-all group"
+      style={{ borderRadius: `${l?.borderRadius || 8}px` }}
     >
-      <Link to={`/product/${product.id}`} className="block relative aspect-square overflow-hidden">
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          referrerPolicy="no-referrer"
-          loading="lazy"
-        />
-        {discount > 0 && (
+      <Link 
+        to={`/product/${product.id}`} 
+        className="block relative overflow-hidden bg-gray-100 product-image-container w-full"
+        style={{ 
+          height: 'var(--img-container-height, var(--prod-img-height, 250px))',
+          aspectRatio: 'var(--prod-img-aspect-ratio, 4/5)'
+        }}
+      >
+        {product.videoUrl ? (
+          <video 
+            src={product.videoUrl} 
+            autoPlay 
+            muted 
+            loop 
+            playsInline 
+            className="w-full h-full transition-transform duration-700"
+            style={{ objectFit: 'var(--prod-img-fit, cover)' as any }}
+          />
+        ) : (
+          <img 
+            src={product.image} 
+            alt={product.name} 
+            className="w-full h-full transition-transform duration-500"
+            style={{ 
+              objectFit: 'var(--prod-img-fit, cover)' as any,
+              backgroundColor: settings.customization?.layout?.productImageFit === 'contain' ? '#f9fafb' : 'transparent'
+            }}
+            referrerPolicy="no-referrer"
+            loading="lazy"
+          />
+        )}
+        {discount > 0 && v?.discountBadges !== false && (
           <div 
-            className="absolute top-2 left-2 text-white text-[10px] font-bold px-2 py-1 rounded"
-            style={{ backgroundColor: settings.primaryColor }}
+            className="absolute top-3 left-3 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-lg shadow-black/20"
+            style={{ backgroundColor: c?.primary || settings.primaryColor }}
           >
-            -{discount}%
+            {discount}% OFF
           </div>
         )}
-        <button 
-          onClick={(e) => {
-            e.preventDefault();
-            isFavorite ? removeFromWishlist(product.id) : addToWishlist(product);
-          }}
-          className={cn(
-             "absolute top-2 right-2 p-1.5 rounded-full shadow-sm transition-all z-10",
-             isFavorite ? "bg-red-500 text-white" : "bg-white text-gray-400 hover:text-red-500"
+        <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+          {v?.wishlistBtn !== false && (
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                isFavorite ? removeFromWishlist(product.id) : addToWishlist(product);
+              }}
+              className={cn(
+                 "p-2 rounded-full shadow-lg transition-all backdrop-blur-md",
+                 isFavorite ? "bg-primary text-white" : "bg-white/90 text-gray-400 hover:text-primary"
+              )}
+              style={isFavorite ? { backgroundColor: c?.primary || settings.primaryColor } : {}}
+            >
+              <Heart size={14} className={isFavorite ? "fill-white" : ""} />
+            </button>
           )}
-        >
-          <Heart size={14} className={isFavorite ? "fill-white" : ""} />
-        </button>
-        <button 
-          onClick={copyLink}
-          className="absolute top-10 right-2 p-1.5 bg-white text-gray-400 hover:text-blue-500 rounded-full shadow-sm transition-all z-10"
-        >
-          {copied ? <Check size={14} className="text-green-500" /> : <Share2 size={14} />}
-        </button>
+          {v?.shareBtn !== false && (
+            <button 
+              onClick={copyLink}
+              className="p-2 rounded-full bg-white/90 text-gray-400 hover:text-primary shadow-lg transition-all backdrop-blur-md relative"
+            >
+              <AnimatePresence>
+                {copied ? (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute inset-0 flex items-center justify-center bg-green-500 rounded-full text-white"
+                  >
+                    <Check size={12} />
+                  </motion.div>
+                ) : (
+                  <Share2 size={14} />
+                )}
+              </AnimatePresence>
+            </button>
+          )}
+        </div>
       </Link>
       
-      <div className="p-3">
+      <div className="p-4 bg-white">
         <Link to={`/product/${product.id}`} className="block">
-          <h3 className="text-sm text-gray-800 line-clamp-2 min-h-[2.5rem] hover:text-primary transition-colors mb-1 font-medium">
+          <h3 
+            className="text-sm font-black line-clamp-1 mb-1 group-hover:text-primary transition-colors"
+            style={{ 
+              color: c?.textHeadings || '#111827',
+              fontSize: `${settings.customization?.fonts?.sizes?.productTitle || 14}px`
+            }}
+          >
             {product.name}
           </h3>
         </Link>
         
-        <div className="flex flex-col mb-2">
-          <span className="text-lg font-bold text-gray-900 leading-none" style={{ color: settings.primaryColor }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span 
+            className="font-black leading-none"
+            style={{ 
+              color: c?.priceColor || c?.primary || settings.primaryColor,
+              fontSize: `${settings.customization?.fonts?.sizes?.price || 20}px`
+            }}
+          >
             {formatPrice(product.price)}
           </span>
           {product.originalPrice && (
-            <span className="text-xs text-gray-400 line-through">
+            <span className="text-[10px] text-gray-400 line-through font-bold">
               {formatPrice(product.originalPrice)}
             </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-auto">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-1">
-            <Star size={12} className="fill-yellow-400 text-yellow-400" />
-            <span className="text-xs font-semibold text-gray-700">{product.rating.toFixed(1)}</span>
-            <span className="text-[10px] text-gray-400">({product.reviews.length})</span>
+            {v?.starRatings !== false && (
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={10} className={cn(i < Math.floor(product.rating) ? "fill-orange-400 text-orange-400" : "text-gray-200")} />
+                ))}
+              </div>
+            )}
+            <span className="text-[10px] font-bold text-gray-400 ml-1">({product.reviews.length})</span>
           </div>
-          
-          <button 
-            onClick={() => addToCart(product)}
-            className="p-2 rounded-full bg-gray-100 text-gray-600 hover:text-white transition-colors animate-pulse hover:animate-none"
-            style={{ 
-               backgroundColor: 'transparent',
-               borderColor: settings.addToCartButton.color,
-               borderWidth: '0px'
-            }}
-             onMouseEnter={(e) => {
-               (e.currentTarget as any).style.backgroundColor = settings.primaryColor;
-               (e.currentTarget as any).style.color = 'white';
-             }}
-             onMouseLeave={(e) => {
-               (e.currentTarget as any).style.backgroundColor = 'transparent';
-               (e.currentTarget as any).style.color = '#4b5563';
-             }}
-          >
-            <ShoppingCart size={18} />
-          </button>
+          {v?.stockInfo !== false && (
+            <span className="text-[8px] font-black uppercase text-gray-400 tracking-widest px-2 py-0.5 bg-gray-100 rounded">{t('স্টক', 'Stock')}: {product.stock}</span>
+          )}
         </div>
+
+        <button 
+          onClick={(e) => {
+            e.preventDefault();
+            if (product.source === 'alibaba' && product.affiliateLink) {
+              window.open(product.affiliateLink, '_blank');
+            } else {
+              openCheckout(product);
+            }
+          }}
+          className="w-full py-4 text-[11px] font-black uppercase tracking-[0.2em] hover:shadow-xl transition-all duration-500 flex items-center justify-center gap-3 group/btn relative overflow-hidden"
+          style={{ 
+            backgroundColor: c?.btnPrimaryBg || '#1a1a1a', 
+            color: c?.btnPrimaryText || 'white',
+            borderRadius: `${l?.buttonRadius || 20}px`
+          }}
+        >
+          <div 
+            className="absolute inset-0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"
+            style={{ backgroundColor: c?.primary || settings.primaryColor }}
+          ></div>
+          <span className="relative z-10">{settings.customization?.text?.confirmOrderBtn || t('অর্ডার করুন', 'Order Now')}</span>
+          <ShoppingCart size={14} className="relative z-10 group-hover/btn:scale-110 transition-transform" />
+        </button>
       </div>
     </motion.div>
   );
