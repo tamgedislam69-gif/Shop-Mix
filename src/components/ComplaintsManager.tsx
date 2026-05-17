@@ -130,7 +130,7 @@ const ComplaintsManager: React.FC = () => {
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleDelete(complaint.id)}
-                        className="p-2.5 text-red-500 hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-100 rounded-xl transition-all"
+                        className="p-3 text-red-500 hover:bg-red-50 hover:text-red-600 hover:shadow-md hover:-translate-y-0.5 rounded-xl transition-all border border-red-50 hover:border-red-100 bg-white"
                         title="Delete complaint"
                       >
                         <Trash2 size={16} />

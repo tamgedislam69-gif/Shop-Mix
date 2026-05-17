@@ -102,8 +102,10 @@ const Footer: React.FC = () => {
                         message,
                         createdAt: serverTimestamp()
                       });
+                      alert("Message submitted successfully!");
                     } catch (error) {
                       console.error("Error saving complaint:", error);
+                      alert("Firebase save failed, redirecting to WhatsApp...");
                     }
                     
                     // 2. WhatsApp Redirection
