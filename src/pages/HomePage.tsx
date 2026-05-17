@@ -373,7 +373,7 @@ const HomePage: React.FC = () => {
           variants={container}
           initial="hidden"
           animate="show"
-          className="product-grid"
+          className="w-full grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4 lg:gap-6"
         >
           {filteredProducts.map(product => (
             <motion.div key={product.id} variants={item}>
