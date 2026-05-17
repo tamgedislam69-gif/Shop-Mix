@@ -21,16 +21,20 @@ export interface ProductVariant {
 
 export interface Product {
   id: string;
+  sku?: string;
   name: string;
   price: number;
   originalPrice?: number;
   image: string;
+  showImage?: boolean;
+  gallery?: string[];
   category: string;
   description: string;
   rating: number;
   reviews: ProductReview[];
   stock: number;
   videoUrl?: string;
+  showVideo?: boolean;
   source: 'alibaba' | 'own';
   variants?: {
     colors: ProductVariant[];

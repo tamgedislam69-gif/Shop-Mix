@@ -351,7 +351,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             : item
         );
       }
-      return [...prev, { ...product, id: itemId, price: itemPrice, quantity, name: `${product.name}${selectedColor ? ` (${selectedColor})` : ''}${selectedSize ? ` (${selectedSize})` : ''}` }];
+      return [...prev, { 
+        ...product, 
+        id: itemId, 
+        price: itemPrice, 
+        quantity, 
+        name: `${product.name}${selectedColor ? ` - ${selectedColor}` : ''}${selectedSize ? ` - ${selectedSize}` : ''}`,
+        selectedColor,
+        selectedSize
+      }];
     });
   };
 

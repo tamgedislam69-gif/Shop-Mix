@@ -941,570 +941,293 @@ const AdminPage: React.FC = () => {
                                     <h3 className="text-2xl font-black uppercase tracking-tight mb-8">
                                         {editingProduct.id ? 'Edit Product' : 'New Product'}
                                     </h3>
-                                    <form onSubmit={handleSaveProduct} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-1 md:col-span-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Product Name</label>
-                                            <input 
-                                                required
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4"
-                                                value={editingProduct.name}
-                                                onChange={e => setEditingProduct({...editingProduct, name: e.target.value})}
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Sale Price (BDT)</label>
-                                            <input 
-                                                type="number"
-                                                required
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 font-mono"
-                                                value={editingProduct.price}
-                                                onChange={e => setEditingProduct({...editingProduct, price: Number(e.target.value)})}
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Original Price (optional)</label>
-                                            <input 
-                                                type="number"
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 font-mono"
-                                                value={editingProduct.originalPrice}
-                                                onChange={e => setEditingProduct({...editingProduct, originalPrice: Number(e.target.value)})}
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Category</label>
-                                            <select 
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4"
-                                                value={editingProduct.category}
-                                                onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}
-                                            >
-                                                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                            </select>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Stock Units</label>
-                                            <input 
-                                                type="number"
-                                                required
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 font-mono"
-                                                value={editingProduct.stock}
-                                                onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})}
-                                            />
-                                        </div>
-                                        <div className="space-y-4 md:col-span-2">
-                                            <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-[#1a1a1a] text-white rounded-[2rem] border border-gray-800 shadow-2xl relative overflow-hidden group">
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-[50px] -mr-16 -mt-16 group-hover:bg-orange-500/20 transition-colors duration-500"></div>
-                                                <div className="flex flex-col gap-2 relative z-10 w-full md:w-auto">
-                                                    <span className="text-[10px] font-black uppercase text-orange-500 tracking-[0.2em] mb-1">Product Strategy</span>
-                                                    <div className="flex bg-gray-800 p-1 rounded-xl">
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => setEditingProduct({...editingProduct, source: 'own', isOwnInventory: true})}
-                                                            className={cn(
-                                                                "px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                                                                editingProduct.source === 'own' ? "bg-orange-500 text-white shadow-lg" : "text-gray-400 hover:text-gray-200"
-                                                            )}
-                                                        >
-                                                            Own Inventory
-                                                        </button>
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => setEditingProduct({...editingProduct, source: 'alibaba', isOwnInventory: false})}
-                                                            className={cn(
-                                                                "px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                                                                editingProduct.source === 'alibaba' ? "bg-orange-500 text-white shadow-lg" : "text-gray-400 hover:text-gray-200"
-                                                            )}
-                                                        >
-                                                            Alibaba Affiliate
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div className="hidden md:block w-px h-12 bg-gray-800"></div>
-                                                <div className="flex-grow relative z-10">
-                                                    <p className="text-[10px] font-medium text-gray-400 leading-relaxed">
-                                                        {editingProduct.source === 'own' 
-                                                            ? "Customers will checkout directly on your site and data will be sent via WhatsApp." 
-                                                            : "Customers will be redirected to the provided Alibaba affiliate link for the final purchase."}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <form onSubmit={handleSaveProduct} className="grid grid-cols-1 gap-8">
+    {/* 1. Basic Info */}
+    <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
+        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">1. Basic Info</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Product Name</label>
+                <input required className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.name} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">SKU / Product Code</label>
+                <input className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.sku || ''} onChange={e => setEditingProduct({...editingProduct, sku: e.target.value})} placeholder="e.g. PROD-001" />
+            </div>
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Category</label>
+                <select className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all appearance-none cursor-pointer" value={editingProduct.category} onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}>
+                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+            </div>
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Stock Units</label>
+                <input type="number" required className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-mono outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.stock} onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})} />
+            </div>
+        </div>
+        <div className="space-y-2 mt-4">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Rich Product Description</label>
+            <div className="bg-white rounded-xl overflow-hidden border border-gray-200">
+                <ReactQuill theme="snow" value={editingProduct.description} onChange={val => setEditingProduct({...editingProduct, description: val})} />
+            </div>
+        </div>
+    </div>
 
-                                        {editingProduct.source === 'alibaba' ? (
-                                            <div className="space-y-1 md:col-span-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest flex items-center gap-2">
-                                                    Alibaba Affiliate Link <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
-                                                </label>
-                                                <div className="relative">
-                                                     <input 
-                                                        className="w-full bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all shadow-sm font-bold placeholder:text-gray-200"
-                                                        value={editingProduct.affiliateLink || ''}
-                                                        placeholder="https://alibaba.com/product/..."
-                                                        onChange={e => setEditingProduct({...editingProduct, affiliateLink: e.target.value})}
-                                                    />
-                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500">
-                                                        <TrendingUp size={20} />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-8 md:col-span-2 p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 shadow-inner">
-                                                {/* Size Section */}
-                                                <div className="space-y-6">
-                                                    <div className="flex items-center justify-between px-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-2 h-6 bg-orange-500 rounded-full"></div>
-                                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Size Selection System</label>
-                                                        </div>
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => setEditingProduct({...editingProduct, enableSizes: !editingProduct.enableSizes})}
-                                                            className={cn(
-                                                                "w-12 h-6 rounded-full p-1 transition-colors duration-300",
-                                                                editingProduct.enableSizes ? "bg-orange-500" : "bg-gray-300"
-                                                            )}
-                                                        >
-                                                            <div className={cn("w-4 h-4 bg-white rounded-full transition-transform duration-300", editingProduct.enableSizes ? "translate-x-6" : "translate-x-0")} />
-                                                        </button>
-                                                    </div>
+    {/* 2. Media with Toggles */}
+    <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
+        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">2. Product Media</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4 relative">
+                <div className="flex items-center justify-between px-1">
+                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Main Cover Image</label>
+                    <button type="button" onClick={() => setEditingProduct({...editingProduct, showImage: editingProduct.showImage !== false ? false : true})} className={cn("w-10 h-5 rounded-full p-1 transition-colors duration-300", editingProduct.showImage !== false ? "bg-orange-500" : "bg-gray-300")}>
+                        <div className={cn("w-3 h-3 bg-white rounded-full transition-transform duration-300", editingProduct.showImage !== false ? "translate-x-5" : "translate-x-0")} />
+                    </button>
+                </div>
+                {editingProduct.showImage !== false && (
+                    <>
+                        <div onClick={() => fileInputRef.current?.click()} className="w-full h-48 border-2 border-dashed border-gray-200 rounded-[2rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden">
+                            {editingProduct.image ? (
+                                <>
+                                    <img src={editingProduct.image || undefined} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <Upload className="text-white" size={24} />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                                        <Upload size={20} />
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-orange-500">Upload Image</span>
+                                </>
+                            )}
+                            {isUploading && (
+                                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                                    <Loader2 className="animate-spin text-orange-500" size={24} />
+                                </div>
+                            )}
+                        </div>
+                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'image')} />
+                        <input className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 text-[10px] font-mono outline-none focus:border-orange-500 focus:ring-2" value={editingProduct.image} onChange={e => setEditingProduct({...editingProduct, image: e.target.value})} placeholder="Or paste URL here..." />
+                    </>
+                )}
+            </div>
 
-                                                    {editingProduct.enableSizes && (
-                                                        <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                                                            {/* Custom Size Input */}
-                                                            <div className="flex gap-2">
-                                                                <input 
-                                                                    id="custom-size-input"
-                                                                    className="flex-grow bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all font-bold placeholder:text-gray-200"
-                                                                    placeholder="Type size and press Enter (e.g. XL)"
-                                                                    onKeyDown={e => {
-                                                                        if (e.key === 'Enter' || e.key === ',') {
-                                                                            e.preventDefault();
-                                                                            const val = e.currentTarget.value.trim().toUpperCase();
-                                                                            if (!val) return;
-                                                                            
-                                                                            const currentSizes = editingProduct.variants?.sizes || [];
-                                                                            if (currentSizes.some(s => s.name === val)) {
-                                                                                e.currentTarget.value = '';
-                                                                                return;
-                                                                            }
+            <div className="space-y-4 relative">
+                <div className="flex items-center justify-between px-1">
+                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Cinematic Video</label>
+                    <button type="button" onClick={() => setEditingProduct({...editingProduct, showVideo: !editingProduct.showVideo})} className={cn("w-10 h-5 rounded-full p-1 transition-colors duration-300", editingProduct.showVideo ? "bg-orange-500" : "bg-gray-300")}>
+                        <div className={cn("w-3 h-3 bg-white rounded-full transition-transform duration-300", editingProduct.showVideo ? "translate-x-5" : "translate-x-0")} />
+                    </button>
+                </div>
+                {editingProduct.showVideo && (
+                    <>
+                        <div onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'video/*';
+                            input.onchange = (e) => handleFileUpload(e, 'video');
+                            input.click();
+                        }} className="w-full h-48 border-2 border-dashed border-gray-200 rounded-[2rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden">
+                            {editingProduct.videoUrl ? (
+                                <>
+                                    <video src={editingProduct.videoUrl || undefined} className="w-full h-full object-cover" muted />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <Video className="text-white" size={24} />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                                        <Video size={20} />
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-orange-500">Upload Video</span>
+                                </>
+                            )}
+                        </div>
+                        <input className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 text-[10px] font-mono outline-none focus:border-orange-500 focus:ring-2" value={editingProduct.videoUrl || ''} onChange={e => setEditingProduct({...editingProduct, videoUrl: e.target.value})} placeholder="Or paste YouTube / File URL here..." />
+                    </>
+                )}
+            </div>
+        </div>
+    </div>
 
-                                                                            setEditingProduct({
-                                                                                ...editingProduct,
-                                                                                variants: {
-                                                                                    ...editingProduct.variants!,
-                                                                                    sizes: [...currentSizes, { id: `s-${Date.now()}`, name: val, priceModifier: 0 }]
-                                                                                }
-                                                                            });
-                                                                            e.currentTarget.value = '';
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <button 
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const input = document.getElementById('custom-size-input') as HTMLInputElement;
-                                                                        const val = input.value.trim().toUpperCase();
-                                                                        if (!val) return;
-                                                                        const currentSizes = editingProduct.variants?.sizes || [];
-                                                                        if (currentSizes.some(s => s.name === val)) {
-                                                                            input.value = '';
-                                                                            return;
-                                                                        }
-                                                                        setEditingProduct({
-                                                                            ...editingProduct,
-                                                                            variants: {
-                                                                                ...editingProduct.variants!,
-                                                                                sizes: [...currentSizes, { id: `s-${Date.now()}`, name: val, priceModifier: 0 }]
-                                                                            }
-                                                                        });
-                                                                        input.value = '';
-                                                                    }}
-                                                                    className="bg-gray-900 text-white px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 transition-colors"
-                                                                >
-                                                                    + Add
-                                                                </button>
-                                                            </div>
+    {/* 3. Smart Pricing */}
+    <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
+        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">3. Smart Pricing</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Original Price (BDT)</label>
+                <input type="number" required className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-mono font-bold outline-none focus:border-orange-500" value={editingProduct.originalPrice || editingProduct.price} onChange={e => {
+                    const op = Number(e.target.value);
+                    setEditingProduct({...editingProduct, originalPrice: op, price: op});
+                }} />
+            </div>
+            
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Apply Discount (%)</label>
+                    <button type="button" id="toggle-discount" onClick={() => {
+                        const isApplying = !editingProduct.originalPrice || editingProduct.originalPrice === editingProduct.price;
+                        if (isApplying && editingProduct.originalPrice) {
+                            setEditingProduct({...editingProduct, price: Math.round(editingProduct.originalPrice * 0.9)});
+                        } else {
+                            setEditingProduct({...editingProduct, price: editingProduct.originalPrice || editingProduct.price});
+                        }
+                    }} className={cn("w-8 h-4 rounded-full p-1 transition-colors duration-300", (editingProduct.originalPrice && editingProduct.price < editingProduct.originalPrice) ? "bg-orange-500" : "bg-gray-300")}>
+                        <div className={cn("w-2 h-2 bg-white rounded-full transition-transform duration-300", (editingProduct.originalPrice && editingProduct.price < editingProduct.originalPrice) ? "translate-x-4" : "translate-x-0")} />
+                    </button>
+                </div>
+                {(editingProduct.originalPrice && editingProduct.price < editingProduct.originalPrice) ? (
+                    <div className="relative">
+                        <input type="number" className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-mono font-bold outline-none focus:border-orange-500 pr-10" 
+                            value={Math.round((1 - editingProduct.price / editingProduct.originalPrice) * 100)}
+                            onChange={e => {
+                                const pct = Number(e.target.value);
+                                if (pct >= 0 && pct <= 100) {
+                                    setEditingProduct({...editingProduct, price: Math.round(editingProduct.originalPrice! * (1 - pct/100))});
+                                }
+                            }}
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">%</span>
+                    </div>
+                ) : (
+                    <div className="w-full bg-gray-100 border border-gray-200 rounded-xl py-3 px-4 text-gray-400 font-bold text-center">No Discount</div>
+                )}
+            </div>
 
-                                                            {/* Quick Add Presets */}
-                                                            <div className="space-y-3">
-                                                                <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Quick Presets</p>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    <div className="flex flex-wrap gap-2 p-2 bg-white/50 rounded-2xl border border-gray-100">
-                                                                        <span className="text-[8px] font-black uppercase text-gray-300 self-center px-2">Clothing:</span>
-                                                                        {CLOTHING_SIZES.map(size => (
-                                                                            <button 
-                                                                                key={size}
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    const currentSizes = editingProduct.variants?.sizes || [];
-                                                                                    if (currentSizes.some(s => s.name === size)) return;
-                                                                                    setEditingProduct({
-                                                                                        ...editingProduct,
-                                                                                        variants: {
-                                                                                            ...editingProduct.variants!,
-                                                                                            sizes: [...currentSizes, { id: `s-${Date.now()}`, name: size, priceModifier: 0 }]
-                                                                                        }
-                                                                                    });
-                                                                                }}
-                                                                                className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-[10px] font-black hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm"
-                                                                            >
-                                                                                {size}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                    <div className="flex flex-wrap gap-2 p-2 bg-white/50 rounded-2xl border border-gray-100">
-                                                                        <span className="text-[8px] font-black uppercase text-gray-300 self-center px-2">Shoes:</span>
-                                                                        {SHOE_SIZES.map(size => (
-                                                                            <button 
-                                                                                key={size}
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    const currentSizes = editingProduct.variants?.sizes || [];
-                                                                                    if (currentSizes.some(s => s.name === size)) return;
-                                                                                    setEditingProduct({
-                                                                                        ...editingProduct,
-                                                                                        variants: {
-                                                                                            ...editingProduct.variants!,
-                                                                                            sizes: [...currentSizes, { id: `s-${Date.now()}`, name: size, priceModifier: 0 }]
-                                                                                        }
-                                                                                    });
-                                                                                }}
-                                                                                className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-[10px] font-black hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm"
-                                                                            >
-                                                                                {size}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-orange-500 tracking-widest ml-1">Final Sale Price</label>
+                <input type="number" readOnly className="w-full bg-orange-50 border-2 border-orange-200 text-orange-600 rounded-xl py-3 px-4 font-mono font-black outline-none" value={editingProduct.price} />
+            </div>
+        </div>
+    </div>
 
-                                                                <div className="flex gap-2">
-                                                                    <input 
-                                                                        id="custom-size-input"
-                                                                        className="flex-grow bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all font-bold placeholder:text-gray-300"
-                                                                        placeholder="Custom Size (e.g. 10.5, XXL, Small)"
-                                                                        onKeyDown={e => {
-                                                                            if (e.key === 'Enter' || e.key === ',') {
-                                                                                e.preventDefault();
-                                                                                document.getElementById('add-size-btn')?.click();
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                    <button 
-                                                                        id="add-size-btn"
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const input = document.getElementById('custom-size-input') as HTMLInputElement;
-                                                                            const name = input.value.trim().replace(/,/g, '');
-                                                                            if (!name) return;
-                                                                            const currentSizes = editingProduct.variants?.sizes || [];
-                                                                            if (currentSizes.some(s => s.name === name)) {
-                                                                                input.value = '';
-                                                                                return;
-                                                                            }
-                                                                            setEditingProduct({
-                                                                                ...editingProduct,
-                                                                                variants: {
-                                                                                    ...editingProduct.variants!,
-                                                                                    sizes: [...currentSizes, { id: `s-${Date.now()}`, name, priceModifier: 0 }]
-                                                                                }
-                                                                            });
-                                                                            input.value = '';
-                                                                        }}
-                                                                        className="bg-gray-900 text-white px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 transition-colors"
-                                                                    >
-                                                                        + Add Size
-                                                                    </button>
-                                                                </div>
-                                                            </div>
+    {/* 4. Product Strategy (The Master Logic) */}
+    <div className="p-8 bg-[#1a1a1a] text-white rounded-[2rem] border border-gray-800 shadow-2xl relative overflow-hidden group space-y-6">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 blur-[80px] -mr-32 -mt-32 group-hover:bg-orange-500/20 transition-colors duration-500 pointer-events-none"></div>
+        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-orange-500 mb-2 relative z-10">4. Product Strategy</h4>
+        
+        <div className="flex bg-gray-800 p-1 rounded-xl w-fit relative z-10">
+            <button type="button" onClick={() => setEditingProduct({...editingProduct, source: 'alibaba', isOwnInventory: false})} className={cn("px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", editingProduct.source === 'alibaba' ? "bg-orange-500 text-white shadow-lg" : "text-gray-400 hover:text-gray-200")}>
+                Affiliate / Other's Product
+            </button>
+            <button type="button" onClick={() => setEditingProduct({...editingProduct, source: 'own', isOwnInventory: true})} className={cn("px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", editingProduct.source === 'own' ? "bg-orange-500 text-white shadow-lg" : "text-gray-400 hover:text-gray-200")}>
+                Own Product
+            </button>
+        </div>
 
-                                                            {/* Added Sizes Tags */}
-                                                            <div className="flex flex-wrap gap-2 pt-2">
-                                                                {editingProduct.variants?.sizes?.map(s => (
-                                                                    <div key={s.id} className="flex items-center gap-2 pl-4 pr-2 py-2 bg-orange-500 text-white rounded-2xl shadow-lg shadow-orange-500/20 animate-in zoom-in duration-300">
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest">{s.name}</span>
-                                                                        <button 
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                setEditingProduct({
-                                                                                    ...editingProduct,
-                                                                                    variants: {
-                                                                                        ...editingProduct.variants!,
-                                                                                        sizes: editingProduct.variants!.sizes.filter(item => item.id !== s.id)
-                                                                                    }
-                                                                                });
-                                                                            }}
-                                                                            className="w-6 h-6 rounded-lg bg-black/20 flex items-center justify-center hover:bg-black/40 transition-colors"
-                                                                        >
-                                                                            <Trash2 size={12} />
-                                                                        </button>
-                                                                    </div>
-                                                                ))}
-                                                                {(editingProduct.variants?.sizes?.length || 0) === 0 && (
-                                                                    <p className="text-[10px] italic text-gray-400 p-2">No sizes added yet.</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
+        {editingProduct.source === 'alibaba' ? (
+            <div className="space-y-2 relative z-10 animate-in fade-in slide-in-from-top-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Redirect URL</label>
+                <input 
+                    className="w-full bg-gray-900 border border-gray-700 rounded-xl py-4 px-6 focus:border-orange-500 outline-none transition-all shadow-sm font-mono placeholder:text-gray-600 focus:ring-2 focus:ring-orange-500/20"
+                    value={editingProduct.affiliateLink || ''}
+                    placeholder="https://example.com/product/..."
+                    onChange={e => setEditingProduct({...editingProduct, affiliateLink: e.target.value})}
+                />
+            </div>
+        ) : (
+            <div className="space-y-8 relative z-10 pt-4 border-t border-gray-800 animate-in fade-in slide-in-from-top-4">
+                <h5 className="text-[11px] font-black uppercase tracking-widest text-gray-300 mb-4">5. Custom Variants</h5>
+                
+                {/* 5. Custom Sizes */}
+                <div className="space-y-4 bg-gray-900/50 p-6 rounded-2xl border border-gray-800">
+                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest flex items-center justify-between">
+                        <span>Sizes (Custom Input)</span>
+                    </label>
+                    <div className="flex gap-2">
+                        <input id="custom-size-input-new" className="flex-grow bg-gray-900 border border-gray-700 rounded-xl py-3 px-4 focus:border-orange-500 outline-none font-bold placeholder:text-gray-600 focus:ring-2 focus:ring-orange-500/20" placeholder="Type ANY size (e.g., S, M, XL, 26, 44) and press Enter" onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = e.currentTarget.value.trim().toUpperCase();
+                                if (!val) return;
+                                const currentSizes = editingProduct.variants?.sizes || [];
+                                if (currentSizes.some(s => s.name === val)) { e.currentTarget.value = ''; return; }
+                                setEditingProduct({...editingProduct, enableSizes: true, variants: {...(editingProduct.variants || {colors: [], sizes: []}), sizes: [...currentSizes, { id: 's-'+Date.now(), name: val, priceModifier: 0 }]}});
+                                e.currentTarget.value = '';
+                            }
+                        }} />
+                        <button type="button" onClick={() => {
+                            const input = document.getElementById('custom-size-input-new') as HTMLInputElement;
+                            if(!input) return;
+                            const val = input.value.trim().toUpperCase();
+                            if (!val) return;
+                            const currentSizes = editingProduct.variants?.sizes || [];
+                            if (currentSizes.some(s => s.name === val)) { input.value = ''; return; }
+                            setEditingProduct({...editingProduct, enableSizes: true, variants: {...(editingProduct.variants || {colors: [], sizes: []}), sizes: [...currentSizes, { id: 's-'+Date.now(), name: val, priceModifier: 0 }]}});
+                            input.value = '';
+                        }} className="bg-gray-800 text-white px-6 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 hover:text-white transition-colors border border-gray-700 hover:border-orange-500">
+                            Add Size
+                        </button>
+                    </div>
+                    {editingProduct.variants?.sizes && editingProduct.variants.sizes.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                            {editingProduct.variants.sizes.map(s => (
+                                <div key={s.id} className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 text-white rounded-lg border border-gray-700">
+                                    <span className="text-[10px] font-black">{s.name}</span>
+                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: {...editingProduct.variants!, sizes: editingProduct.variants!.sizes.filter(item => item.id !== s.id)}})} className="text-gray-400 hover:text-red-500"><Trash2 size={14}/></button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
-                                                <div className="h-px bg-gray-200"></div>
+                {/* 5. Custom Colors */}
+                <div className="space-y-4 bg-gray-900/50 p-6 rounded-2xl border border-gray-800">
+                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest flex items-center justify-between">
+                        <span>Colors (Custom Input)</span>
+                    </label>
+                    <div className="flex gap-2">
+                        <input id="custom-color-input-new" className="flex-grow bg-gray-900 border border-gray-700 rounded-xl py-3 px-4 focus:border-orange-500 outline-none font-bold placeholder:text-gray-600 focus:ring-2 focus:ring-orange-500/20" placeholder="Type ANY color name (e.g., Midnight Blue) and press Enter" onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = e.currentTarget.value.trim();
+                                if (!val) return;
+                                const currentColors = editingProduct.variants?.colors || [];
+                                if (currentColors.some(c => c.name.toLowerCase() === val.toLowerCase())) { e.currentTarget.value = ''; return; }
+                                setEditingProduct({...editingProduct, enableColors: true, variants: {...(editingProduct.variants || {colors: [], sizes: []}), colors: [...currentColors, { id: 'c-'+Date.now(), name: val, priceModifier: 0 }]}});
+                                e.currentTarget.value = '';
+                            }
+                        }} />
+                        <button type="button" onClick={() => {
+                            const input = document.getElementById('custom-color-input-new') as HTMLInputElement;
+                            if(!input) return;
+                            const val = input.value.trim();
+                            if (!val) return;
+                            const currentColors = editingProduct.variants?.colors || [];
+                            if (currentColors.some(c => c.name.toLowerCase() === val.toLowerCase())) { input.value = ''; return; }
+                            setEditingProduct({...editingProduct, enableColors: true, variants: {...(editingProduct.variants || {colors: [], sizes: []}), colors: [...currentColors, { id: 'c-'+Date.now(), name: val, priceModifier: 0 }]}});
+                            input.value = '';
+                        }} className="bg-gray-800 text-white px-6 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 hover:text-white transition-colors border border-gray-700 hover:border-orange-500">
+                            Add Color
+                        </button>
+                    </div>
+                    {editingProduct.variants?.colors && editingProduct.variants.colors.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                            {editingProduct.variants.colors.map(c => (
+                                <div key={c.id} className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 text-white rounded-lg border border-gray-700">
+                                    <span className="text-[10px] font-black">{c.name}</span>
+                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: {...editingProduct.variants!, colors: editingProduct.variants!.colors.filter(item => item.id !== c.id)}})} className="text-gray-400 hover:text-red-500"><Trash2 size={14}/></button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
+    </div>
 
-                                                {/* Color Section */}
-                                                <div className="space-y-6">
-                                                    <div className="flex items-center justify-between px-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-2 h-6 bg-orange-500 rounded-full"></div>
-                                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Color Branding Engine</label>
-                                                        </div>
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => setEditingProduct({...editingProduct, enableColors: !editingProduct.enableColors})}
-                                                            className={cn(
-                                                                "w-12 h-6 rounded-full p-1 transition-colors duration-300",
-                                                                editingProduct.enableColors ? "bg-orange-500" : "bg-gray-300"
-                                                            )}
-                                                        >
-                                                            <div className={cn("w-4 h-4 bg-white rounded-full transition-transform duration-300", editingProduct.enableColors ? "translate-x-6" : "translate-x-0")} />
-                                                        </button>
-                                                    </div>
-
-                                                    {editingProduct.enableColors && (
-                                                        <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                                                            {/* Color Inputs */}
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                <div className="flex gap-2">
-                                                                    <input 
-                                                                        id="custom-color-input"
-                                                                        className="flex-grow bg-white border-2 border-gray-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 outline-none transition-all font-bold placeholder:text-gray-200"
-                                                                        placeholder="Color Name (e.g. Navy Blue)"
-                                                                        onKeyDown={e => {
-                                                                            if (e.key === 'Enter' || e.key === ',') {
-                                                                                e.preventDefault();
-                                                                                document.getElementById('add-color-btn')?.click();
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                <div className="flex gap-2">
-                                                                    <div className="relative flex-grow">
-                                                                        <input 
-                                                                            id="custom-hex-input"
-                                                                            type="color"
-                                                                            className="w-full h-14 bg-white border-2 border-gray-100 rounded-2xl p-1 cursor-pointer"
-                                                                            defaultValue="#000000"
-                                                                        />
-                                                                    </div>
-                                                                    <button 
-                                                                        id="add-color-btn"
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const nameInput = document.getElementById('custom-color-input') as HTMLInputElement;
-                                                                            const hexInput = document.getElementById('custom-hex-input') as HTMLInputElement;
-                                                                            const name = nameInput.value.trim().replace(/,/g, '');
-                                                                            const hex = hexInput.value;
-                                                                            if (!name) return;
-                                                                            
-                                                                            const currentColors = editingProduct.variants?.colors || [];
-                                                                            if (currentColors.some(c => c.name === name)) {
-                                                                                nameInput.value = '';
-                                                                                return;
-                                                                            }
-
-                                                                            setEditingProduct({
-                                                                                ...editingProduct,
-                                                                                variants: {
-                                                                                    ...editingProduct.variants!,
-                                                                                    colors: [...currentColors, { id: `c-${Date.now()}`, name, hex, priceModifier: 0 }]
-                                                                                }
-                                                                            });
-                                                                            nameInput.value = '';
-                                                                        }}
-                                                                        className="bg-gray-900 text-white px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 transition-colors"
-                                                                    >
-                                                                        + Add Color
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Color Presets */}
-                                                            <div className="space-y-3">
-                                                                <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Universal Swatches</p>
-                                                                <div className="flex flex-wrap gap-2 p-4 bg-white rounded-[2rem] border border-gray-100">
-                                                                    {COLOR_PRESETS.map(color => (
-                                                                        <button 
-                                                                            key={color.name}
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                const currentColors = editingProduct.variants?.colors || [];
-                                                                                if (currentColors.some(c => c.name === color.name)) return;
-                                                                                setEditingProduct({
-                                                                                    ...editingProduct,
-                                                                                    variants: {
-                                                                                        ...editingProduct.variants!,
-                                                                                        colors: [...currentColors, { id: `c-${Date.now()}`, name: color.name, hex: color.hex, priceModifier: 0 }]
-                                                                                    }
-                                                                                });
-                                                                            }}
-                                                                            className="flex items-center gap-2 pl-2 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-2xl hover:border-orange-500 hover:bg-orange-50 transition-all group"
-                                                                        >
-                                                                            <div className="w-5 h-5 rounded-full shadow-inner border border-gray-200" style={{ backgroundColor: color.hex }}></div>
-                                                                            <span className="text-[10px] font-black uppercase text-gray-400 group-hover:text-orange-500">{color.name}</span>
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Added Colors Tags */}
-                                                            <div className="flex flex-wrap gap-3 pt-2">
-                                                                {editingProduct.variants?.colors?.map(c => (
-                                                                    <div key={c.id} className="flex items-center gap-3 pl-3 pr-2 py-2 bg-[#1a1a1a] text-white rounded-[1.2rem] shadow-xl border border-gray-800 animate-in zoom-in duration-300">
-                                                                        <div className="w-6 h-6 rounded-full border border-gray-700 shadow-inner" style={{ backgroundColor: c.hex }}></div>
-                                                                        <div className="flex flex-col">
-                                                                            <span className="text-[9px] font-black uppercase tracking-widest leading-none mb-0.5">{c.name}</span>
-                                                                            <span className="text-[7px] font-mono text-gray-500 uppercase tracking-widest">{c.hex}</span>
-                                                                        </div>
-                                                                        <button 
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                setEditingProduct({
-                                                                                    ...editingProduct,
-                                                                                    variants: {
-                                                                                        ...editingProduct.variants!,
-                                                                                        colors: editingProduct.variants!.colors.filter(item => item.id !== c.id)
-                                                                                    }
-                                                                                });
-                                                                            }}
-                                                                            className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-orange-500 transition-colors"
-                                                                        >
-                                                                            <Trash2 size={12} />
-                                                                        </button>
-                                                                    </div>
-                                                                ))}
-                                                                {(editingProduct.variants?.colors?.length || 0) === 0 && (
-                                                                    <p className="text-[10px] italic text-gray-400 p-2">No colors added yet.</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="space-y-1 md:col-span-2">
-                                            <div className="flex justify-between items-center px-1 mb-1">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Product Media Assets</label>
-                                                <button 
-                                                    type="button"
-                                                    onClick={() => setActiveTab('media')}
-                                                    className="text-[10px] font-black uppercase text-orange-500 hover:underline tracking-widest"
-                                                >
-                                                    Open Media Library
-                                                </button>
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                                <div className="space-y-4">
-                                                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest pl-1">Main Cover Image</label>
-                                                    <div 
-                                                      onClick={() => fileInputRef.current?.click()}
-                                                      className="w-full h-40 border-2 border-dashed border-gray-200 rounded-[2.5rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden"
-                                                    >
-                                                        {editingProduct.image ? (
-                                                            <>
-                                                                <img src={editingProduct.image || undefined} className="w-full h-full object-cover" />
-                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                    <Upload className="text-white" size={24} />
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors">
-                                                                    <Upload size={18} />
-                                                                </div>
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-orange-500">Upload Image</span>
-                                                            </>
-                                                        )}
-                                                        {isUploading && (
-                                                            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-                                                                <Loader2 className="animate-spin text-orange-500" size={24} />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <input 
-                                                      type="file"
-                                                      ref={fileInputRef}
-                                                      className="hidden"
-                                                      accept="image/*"
-                                                      onChange={(e) => handleFileUpload(e, 'image')}
-                                                    />
-                                                    <input 
-                                                      className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 text-[10px] font-mono focus:ring-2 focus:ring-orange-500/20 outline-none"
-                                                      value={editingProduct.image}
-                                                      onChange={e => setEditingProduct({...editingProduct, image: e.target.value})}
-                                                      placeholder="Or paste URL here..."
-                                                    />
-                                                </div>
-
-                                                <div className="space-y-4">
-                                                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest pl-1">Cinematic Video (Optional)</label>
-                                                    <div 
-                                                      onClick={() => {
-                                                        const input = document.createElement('input');
-                                                        input.type = 'file';
-                                                        input.accept = 'video/*';
-                                                        input.onchange = (e: any) => handleFileUpload(e, 'video');
-                                                        input.click();
-                                                      }}
-                                                      className="w-full h-40 border-2 border-dashed border-gray-200 rounded-[2.5rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden"
-                                                    >
-                                                        {editingProduct.videoUrl ? (
-                                                            <>
-                                                                <video src={editingProduct.videoUrl || undefined} className="w-full h-full object-cover" muted />
-                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                    <Video className="text-white" size={24} />
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors">
-                                                                    <Video size={18} />
-                                                                </div>
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-orange-500">Upload Video</span>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                    <input 
-                                                      className="w-full bg-white border border-gray-100 rounded-xl py-3 px-4 text-[10px] font-mono focus:ring-2 focus:ring-orange-500/20 outline-none"
-                                                      value={editingProduct.videoUrl || ''}
-                                                      onChange={e => setEditingProduct({...editingProduct, videoUrl: e.target.value})}
-                                                      placeholder="Or paste URL here..."
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1 md:col-span-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest px-1">Rich Product Description</label>
-                                            <ReactQuill 
-                                                theme="snow"
-                                                value={editingProduct.description}
-                                                onChange={val => setEditingProduct({...editingProduct, description: val})}
-                                            />
-                                        </div>
-                                        
-                                        <div className="md:col-span-2 flex gap-4 pt-4">
-                                            <button 
-                                                type="submit" 
-                                                className="flex-grow py-4 bg-gray-900 text-white font-black uppercase tracking-widest rounded-xl"
-                                            >
-                                                Save Product
-                                            </button>
-                                            <button 
-                                                type="button"
-                                                onClick={() => setEditingProduct(null)}
-                                                className="px-8 py-4 bg-gray-100 text-gray-500 font-black uppercase tracking-widest rounded-xl hover:bg-gray-200"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </form>
+    <div className="md:col-span-1 pt-6 flex gap-4">
+        <button type="submit" className="flex-grow py-5 bg-orange-500 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl hover:bg-orange-600 transition-colors shadow-orange-500/20 active:scale-[0.98]">
+            {editingProduct.id ? 'Save Changes' : 'Publish Product'}
+        </button>
+        <button type="button" onClick={() => setEditingProduct(null)} className="px-8 py-5 bg-white border border-gray-200 text-gray-400 font-black uppercase tracking-widest rounded-2xl hover:bg-gray-50 transition-colors">
+            Cancel
+        </button>
+    </div>
+</form>
                                 </motion.div>
                             </div>
                         )}

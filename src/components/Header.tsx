@@ -231,22 +231,6 @@ const Header: React.FC = () => {
               <span className="text-[10px] font-black uppercase mt-1 tracking-widest">{t('ড্যাশবোর্ড', 'Dashboard')}</span>
             </Link>
           )}
-          <Link to="/cart" className="relative group p-2">
-            <ShoppingCart size={24} className="group-hover:text-primary transition-colors" style={{ color: settings.customization?.colors?.cartIcon || settings.customization?.colors?.headerText || '#374151' }} />
-            <AnimatePresence>
-              {cartCount > 0 && (
-                <motion.span 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  className="absolute top-0 right-0 h-5 w-5 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white"
-                  style={{ backgroundColor: settings.customization?.colors?.primary || settings.primaryColor }}
-                >
-                  {cartCount}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </Link>
           {v?.searchBar !== false && (
             <button 
               className="md:hidden"

@@ -56,8 +56,6 @@ const Footer: React.FC = () => {
           <h3 className="text-lg font-black uppercase mb-6 tracking-widest" style={{ color: col?.footerTitle || 'white' }}>{t('দ্রুত লিঙ্ক', 'Quick Links')}</h3>
           <ul className="space-y-3 text-xs font-bold uppercase tracking-widest opacity-80">
             <li><Link to="/" className="hover:text-white transition-colors">{t('সব পণ্যের তালিকা', 'All Products')}</Link></li>
-            <li><Link to="/cart" className="hover:text-white transition-colors">{t('আমার কার্ট', 'My Shopping Cart')}</Link></li>
-            <li><Link to="/checkout" className="hover:text-white transition-colors">{t('চেকআউট', 'Checkout Process')}</Link></li>
             <li><Link to="/login" className="hover:text-white transition-colors">{t('অ্যাডমিন লগইন', 'Admin Login')}</Link></li>
           </ul>
         </div>

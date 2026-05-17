@@ -295,7 +295,7 @@ const ProductPage: React.FC = () => {
                             </button>
                             <span className="w-14 text-center font-black text-xl tabular-nums text-[#1a1a1a]">{quantity}</span>
                             <button 
-                                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                                onClick={() => setQuantity(quantity + 1)}
                                 className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 text-gray-400 hover:text-primary hover:border-primary transition-all"
                                 style={{ '--tw-text-opacity': 1, color: c?.primary || settings.primaryColor } as any}
                             >
@@ -306,7 +306,7 @@ const ProductPage: React.FC = () => {
                </div>
 
                {/* Action Buttons */}
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 gap-4 pt-6">
                     <motion.button 
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -326,20 +326,6 @@ const ProductPage: React.FC = () => {
                       <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                       <span className="relative z-10">{settings.customization?.text?.confirmOrderBtn || t('অর্ডার করুন', 'Order Now')}</span>
                       <ShoppingCart size={20} className="relative z-10 group-hover:scale-110 transition-transform" />
-                    </motion.button>
-                    <motion.button 
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => addToCart(product, quantity, selectedColor, selectedSize)}
-                        className="w-full py-5 text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 group"
-                        style={{ 
-                          backgroundColor: c?.btnPrimaryBg || '#1a1a1a',
-                          color: c?.btnPrimaryText || 'white',
-                          borderRadius: `${l?.buttonRadius || 24}px`
-                        }}
-                    >
-                      <span>{t('কার্টে যোগ করুন', 'Add to Cart')}</span>
-                      <ShoppingBag size={20} className="group-hover:translate-y-[-2px] transition-transform" />
                     </motion.button>
                </div>
           </div>

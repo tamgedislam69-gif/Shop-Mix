@@ -150,8 +150,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         </div>
 
-        {/* 3 Action Icons Row */}
-        <div className="grid grid-cols-5 gap-2 mt-auto">
+        {/* Action Icons Row */}
+        <div className="flex gap-2 mt-auto text-xs">
           <button 
             onClick={(e) => {
               e.preventDefault();
@@ -159,7 +159,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               isFavorite ? removeFromWishlist(product.id) : addToWishlist(product);
             }}
             className={cn(
-              "col-span-1 py-3 rounded-xl flex items-center justify-center transition-all border shrink-0",
+              "w-12 h-12 rounded-xl flex items-center justify-center transition-all border shrink-0",
               isFavorite ? "border-red-100 bg-red-50 text-red-500" : "bg-white border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50"
             )}
             title={t('উইশলিস্ট', 'Wishlist')}
@@ -167,15 +167,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <Heart size={16} className={isFavorite ? "fill-current" : ""} />
           </button>
 
-          <Link
-            to={`/product/${product.id}`}
-            className="col-span-1 py-3 rounded-xl flex items-center justify-center transition-all border border-gray-100 bg-white text-gray-400 hover:text-gray-900 hover:bg-gray-50 shrink-0"
-            title={t('বিস্তারিত দেখুন', 'Quick View')}
-          >
-            <Eye size={16} />
-          </Link>
-
-          <button 
+          <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -185,11 +177,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 openCheckout(product);
               }
             }}
-            className="col-span-3 py-3 rounded-xl flex items-center justify-center gap-2 text-white text-[11px] font-black uppercase tracking-widest transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
+            className="flex-grow py-3 rounded-xl flex items-center justify-center gap-2 text-white font-black uppercase tracking-widest shadow-md transition-transform hover:scale-[1.02] active:scale-[0.98]"
             style={{ backgroundColor: c?.primary || settings.primaryColor }}
-            title={t('কার্টে যোগ করুন', 'Add to Cart')}
+            title={t('অর্ডার করুন', 'Order Now')}
           >
-             <ShoppingCart size={14} /> Buy
+            <ShoppingCart size={14} /> {t('অর্ডার করুন', 'Order')}
           </button>
         </div>
       </div>

@@ -10,8 +10,6 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import ProductPage from './pages/ProductPage';
-import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
 import LoginPage from './pages/LoginPage';
 import AdminPage from './pages/AdminPage';
 import WishlistPage from './pages/WishlistPage';
@@ -23,8 +21,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import BackToTop from './components/BackToTop';
 import PromoPopup from './components/PromoPopup';
 import Preloader from './components/Preloader';
-import FloatingCart from './components/FloatingCart';
-import CheckoutDrawer from './components/CheckoutDrawer';
+import CheckoutModal from './components/CheckoutModal';
 import { AdminProcessSettings } from './components/AdminProcessSettings';
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -41,10 +38,8 @@ function AppRoutes() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/product/:id" element={<ProductPage />} />
-            <Route path="/cart" element={<CartPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/track-order" element={<OrderTrackingPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route 
               path="/secret-admin-access/*" 
@@ -63,8 +58,7 @@ function AppRoutes() {
       <BackToTop />
       <PromoPopup />
       <Preloader />
-      <FloatingCart />
-      <CheckoutDrawer />
+      <CheckoutModal />
       <AdminProcessSettings />
     </div>
   );
