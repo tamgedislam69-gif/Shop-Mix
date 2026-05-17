@@ -40,6 +40,7 @@ import {
   MousePointer2,
   Upload,
   Loader2,
+  MessageSquare,
   Type as TypeIcon
 } from 'lucide-react';
 import { CATEGORIES, INITIAL_SETTINGS } from '../constants';
@@ -51,6 +52,7 @@ import { useNavigate } from 'react-router-dom';
 
 import PostManager from '../components/PostManager';
 import MediaManager from '../components/MediaManager';
+import ComplaintsManager from '../components/ComplaintsManager';
 
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -82,7 +84,7 @@ const AdminPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { products, setProducts, settings, updateSettings, orders, setOrders, analytics, logout } = useApp();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'settings' | 'orders' | 'media' | 'posts' | 'customization'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'settings' | 'orders' | 'media' | 'posts' | 'customization' | 'complaints'>('dashboard');
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'image' | 'video') => {
     const file = e.target.files?.[0];
@@ -314,6 +316,15 @@ const AdminPage: React.FC = () => {
                     {orders.length > 0 && (
                         <span className="ml-auto bg-primary text-white text-[10px] px-2 py-1 rounded-full" style={{ backgroundColor: settings.primaryColor }}>{orders.length}</span>
                     )}
+                </button>
+                <button 
+                  onClick={() => setActiveTab('complaints')}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all text-sm uppercase tracking-wider",
+                    activeTab === 'complaints' ? "bg-red-500 text-white shadow-lg" : "text-gray-500 hover:bg-gray-100"
+                  )}
+                >
+                    <MessageSquare size={18} /> Complaints Log
                 </button>
             </nav>
 
@@ -2327,6 +2338,17 @@ const AdminPage: React.FC = () => {
                                 </div>
                             </section>
                         </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'complaints' && (
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-6"
+                    >
+                        <ComplaintsManager />
                     </motion.div>
                 )}
 

@@ -350,7 +350,7 @@ const Header: React.FC = () => {
                 
                 <div className="pt-6 border-top border-gray-100 text-xs text-gray-500 font-bold uppercase tracking-widest">
                   <p>{t('যোগাযোগ করুন', 'Contact Us')}</p>
-                  <p>+880 1234567890</p>
+                  <p>+8801771357329</p>
                 </div>
               </div>
             </motion.div>

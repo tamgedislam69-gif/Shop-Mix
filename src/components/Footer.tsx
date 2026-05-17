@@ -107,8 +107,7 @@ const Footer: React.FC = () => {
                     }
                     
                     // 2. WhatsApp Redirection
-                    // TODO: PUT YOUR WHATSAPP NUMBER HERE (e.g., 8801700000000)
-                    const whatsappNumber = "8801700000000";
+                    const whatsappNumber = "8801771357329";
                     
                     window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
                     (e.target as HTMLFormElement).reset();
@@ -167,15 +166,15 @@ const Footer: React.FC = () => {
           <h3 className="text-lg font-black uppercase mb-6 tracking-widest" style={{ color: col?.footerTitle || 'white' }}>{t('যোগাযোগ', 'Contact Info')}</h3>
           <div className="flex items-start gap-3 text-sm">
             <MapPin size={18} className="mt-1 flex-shrink-0" style={{ color: col?.primary || settings.primaryColor }} />
-            <span>Bashundhara R/A, Block C, Road 18, Dhaka, Bangladesh</span>
+            <span>Dhaka, Bangladesh</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Phone size={18} className="flex-shrink-0" style={{ color: col?.primary || settings.primaryColor }} />
-            <span>+880 1900 000 000</span>
+            <span>+8801771357329</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Mail size={18} className="flex-shrink-0" style={{ color: col?.primary || settings.primaryColor }} />
-            <span>support@shopmixbd.com</span>
+            <span>tamgedislam69@gmail.com</span>
           </div>
         </div>
       </div>
