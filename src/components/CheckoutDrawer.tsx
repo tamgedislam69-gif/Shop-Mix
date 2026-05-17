@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShoppingBag, Truck, MapPin, Phone, User, CheckCircle2 } from 'lucide-react';
+import { X, ShoppingBag, Truck, MapPin, Phone, User, CheckCircle2, MessageCircle, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../context/AppContext';
 import { formatPrice, cn } from '../lib/utils';
@@ -32,6 +32,7 @@ const CheckoutDrawer: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [encodedMsg, setEncodedMsg] = useState('');
 
   useEffect(() => {
     if (selectedProductForCheckout) {
@@ -117,6 +118,7 @@ const CheckoutDrawer: React.FC = () => {
 💰 *Final Bill:* ${grandTotal} BDT`;
 
     const encodedMessage = encodeURIComponent(message);
+    setEncodedMsg(encodedMessage);
     const whatsappUrl = `https://wa.me/8801771357329?text=${encodedMessage}`;
 
     // 1. Save to Firestore (Primary Backup)
@@ -143,26 +145,22 @@ const CheckoutDrawer: React.FC = () => {
         ...newOrder,
         serverTimestamp: serverTimestamp()
       });
-      
+    } catch (error) {
+      console.error("Order Backup Failed:", error);
+    } finally {
       // 2. Add to local state
       addOrder(newOrder);
 
       // 3. Handle WhatsApp Redirect (Delayed for better UX transition)
       setTimeout(() => {
-        window.open(whatsappUrl, '_blank');
+        try {
+          window.open(whatsappUrl, '_blank');
+        } catch(e) {
+          console.error("Popup blocked", e);
+        }
         setIsSubmitting(false);
         setShowSuccess(true);
-      }, 800);
-
-    } catch (error) {
-      console.error("Order Backup Failed:", error);
-      // Still allow the order to proceed via local state and WhatsApp even if Firestore fails
-      addOrder(newOrder);
-      setTimeout(() => {
-        window.open(whatsappUrl, '_blank');
-        setIsSubmitting(false);
-        setShowSuccess(true);
-      }, 800);
+      }, 500);
     }
   };
 
@@ -509,33 +507,56 @@ const CheckoutDrawer: React.FC = () => {
                   </form>
                 </div>
               ) : (
-                <div className="p-10 flex flex-col items-center justify-center text-center h-full bg-[#1a1a1a]">
+                <div className="p-8 flex flex-col items-center justify-center text-center h-full bg-[#1a1a1a]">
                   <motion.div
                     initial={{ scale: 0, rotate: -45 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', damping: 12, stiffness: 200 }}
-                    className="w-24 h-24 rounded-[2rem] flex items-center justify-center mb-8 shadow-2xl"
+                    className="w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 shadow-2xl"
                     style={{ backgroundColor: c?.primary || settings.primaryColor }}
                   >
-                    <CheckCircle2 size={56} className="text-white" />
+                    <CheckCircle2 size={48} className="text-white" />
                   </motion.div>
-                  <h2 className="text-4xl font-black text-white mb-4 tracking-tighter">THANK YOU!</h2>
-                  <p className="text-gray-400 mb-10 max-w-[280px] text-sm font-medium leading-relaxed">
-                    আপনার অর্ডারটি সফলভাবে প্রেরণ করা হয়েছে। আমরা খুব শীঘ্রই আপনার হোয়াটসঅ্যাপে যোগাযোগ করবো।
+                  <h2 className="text-3xl font-black text-white mb-2 tracking-tighter">Order Placed Successfully!</h2>
+                  <p className="text-gray-400 mb-8 max-w-[280px] text-sm font-medium leading-relaxed">
+                    We will contact you soon. Please choose an app below to send your order details directly to our manager.
                   </p>
+                  
+                  <div className="w-full space-y-3 mb-8">
+                     <button
+                        onClick={() => window.open(`https://wa.me/8801771357329?text=${encodedMsg}`, '_blank')}
+                        className="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black uppercase tracking-wider text-[11px] rounded-xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                     >
+                        <MessageCircle size={18} /> Send via WhatsApp
+                     </button>
+                     <button
+                        onClick={() => {
+                            navigator.clipboard.writeText(decodeURIComponent(encodedMsg));
+                            alert("Message copied! Please paste it in IMO.");
+                            window.open('intent://#Intent;scheme=imo;package=com.imo.android.imoim;end', '_blank');
+                        }}
+                        className="w-full py-4 bg-sky-500 hover:bg-sky-600 text-white font-black uppercase tracking-wider text-[11px] rounded-xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                     >
+                        <Phone size={18} /> Send via IMO
+                     </button>
+                     <button
+                        onClick={() => {
+                            navigator.clipboard.writeText(decodeURIComponent(encodedMsg));
+                            alert("Message copied! Please paste it in Messenger.");
+                            window.open('https://m.me/', '_blank');
+                        }}
+                        className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider text-[11px] rounded-xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                     >
+                        <MessageSquare size={18} /> Send via Messenger
+                     </button>
+                  </div>
+
                   <button
                     onClick={handleClose}
-                    className="w-full py-5 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl active:scale-[0.98] transition-all"
-                    style={{ backgroundColor: c?.primary || settings.primaryColor, borderRadius: `${l?.buttonRadius || 16}px` }}
+                    className="w-full py-4 text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl border border-gray-800 hover:bg-gray-800 transition-all"
                   >
-                    Back to Shop
+                    Close
                   </button>
-                  
-                  <div className="mt-12 flex items-center gap-4">
-                      <div className="w-12 h-px bg-gray-800"></div>
-                      <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Order Success</span>
-                      <div className="w-12 h-px bg-gray-800"></div>
-                  </div>
                 </div>
               )}
             </div>

@@ -41,6 +41,9 @@ import {
   Upload,
   Loader2,
   MessageSquare,
+  User,
+  Phone,
+  MapPin,
   Type as TypeIcon
 } from 'lucide-react';
 import { CATEGORIES, INITIAL_SETTINGS } from '../constants';
@@ -2359,152 +2362,173 @@ const AdminPage: React.FC = () => {
                         exit={{ opacity: 0, x: -20 }}
                         className="space-y-6"
                     >
-                        <div className="pb-6 border-b border-gray-100 flex justify-between items-center">
+                        <div className="flex justify-between items-center bg-gray-900 p-8 rounded-[2rem] shadow-xl text-white">
                              <div>
-                                <h2 className="text-2xl font-black uppercase tracking-tight">Recent Transactions</h2>
-                                <p className="text-gray-400 text-sm mt-1">Real-time order feed and fulfillment</p>
+                                <h2 className="text-3xl font-black uppercase tracking-tight flex items-center gap-3">
+                                    <ShoppingBag className="text-orange-500" size={32} /> Orders Dashboard
+                                </h2>
+                                <p className="text-gray-400 text-sm mt-2 font-medium">Real-time enterprise order fulfillment and tracking system</p>
                              </div>
                              {orders.length > 0 && (
                                 <button 
                                     onClick={exportOrdersToExcel}
-                                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-xs font-black uppercase tracking-widest shadow-lg hover:bg-green-600 transition-all"
+                                    className="flex items-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:bg-gray-100 transition-all active:scale-95"
                                 >
-                                    <Download size={14} /> Export to Excel
+                                    <Download size={16} /> Export CSV
                                 </button>
                              )}
                         </div>
 
                         {orders.length === 0 ? (
-                            <div className="py-20 text-center space-y-4">
-                                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-200">
-                                    <ShoppingBag size={40} />
+                            <div className="py-24 text-center space-y-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm mt-6">
+                                <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mx-auto text-orange-200">
+                                    <ShoppingBag size={48} />
                                 </div>
                                 <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">No orders received yet</p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                {orders.map(order => (
-                                    <div key={order.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-gray-50">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center text-white shadow-lg">
-                                                    <ShoppingBag size={20} className="text-orange-500" />
+                            <div className="grid grid-cols-1 gap-6 mt-6">
+                                {orders.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(order => (
+                                    <div key={order.id} className="bg-white border-2 border-transparent hover:border-gray-900 rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl transition-all duration-300">
+                                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6 pb-6 border-b border-gray-100">
+                                            <div className="flex items-center gap-5">
+                                                <div className="w-16 h-16 bg-gray-50 rounded-[1.25rem] flex items-center justify-center text-gray-900 shadow-inner border border-gray-100">
+                                                    <ShoppingBag size={24} className="text-orange-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
-                                                        {order.id}
-                                                        {order.status === 'pending' && <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>}
-                                                    </h4>
-                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{new Date(order.createdAt).toLocaleString()}</p>
+                                                    <div className="flex items-center gap-3 mb-1">
+                                                        <h4 className="font-black text-xl text-gray-900 uppercase tracking-tight">
+                                                            {order.id}
+                                                        </h4>
+                                                        {order.status === 'pending' && <span className="px-3 py-1 bg-orange-100 text-orange-600 text-[9px] font-black uppercase tracking-widest rounded-full animate-pulse">New Order</span>}
+                                                    </div>
+                                                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(order.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                 <select 
-                                                   value={order.status}
-                                                   onChange={(e) => {
-                                                     const newStatus = e.target.value as any;
-                                                     setOrders(prev => prev.map(o => o.id === order.id ? {...o, status: newStatus} : o));
-                                                   }}
-                                                   className={cn(
-                                                     "text-[10px] font-black uppercase px-3 py-2 rounded-lg border focus:ring-2 outline-none transition-all cursor-pointer",
-                                                     order.status === 'pending' ? "bg-orange-50 text-orange-600 border-orange-100" :
-                                                     order.status === 'processing' ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                                     order.status === 'shipped' ? "bg-purple-50 text-purple-600 border-purple-100" :
-                                                     "bg-green-50 text-green-600 border-green-100"
-                                                   )}
-                                                 >
-                                                   <option value="pending">Pending</option>
-                                                   <option value="processing">Processing</option>
-                                                   <option value="shipped">Shipped</option>
-                                                   <option value="delivered">Delivered</option>
-                                                 </select>
-                                                 <span className="font-black text-lg text-gray-900">{formatPrice(order.total)}</span>
+                                            <div className="flex items-center gap-6">
+                                                 <div className="flex flex-col items-end gap-1">
+                                                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Order Amount</span>
+                                                    <span className="font-black text-2xl text-gray-900 tracking-tighter">{formatPrice(order.total)}</span>
+                                                 </div>
+                                                 <div className="w-px h-12 bg-gray-100 hidden lg:block"></div>
+                                                 <div className="flex flex-col items-end gap-1">
+                                                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Status</span>
+                                                    <select 
+                                                      value={order.status}
+                                                      onChange={(e) => {
+                                                        const newStatus = e.target.value as any;
+                                                        // Update visually immediately
+                                                        setOrders(prev => prev.map(o => o.id === order.id ? {...o, status: newStatus} : o));
+                                                        // Update in firestore
+                                                        import('firebase/firestore').then(({ doc, updateDoc }) => {
+                                                            import('../lib/firebase').then(({ db }) => {
+                                                                updateDoc(doc(db, 'orders', order.id), { status: newStatus }).catch(console.error);
+                                                            });
+                                                        });
+                                                      }}
+                                                      className={cn(
+                                                        "text-[11px] font-black uppercase px-4 py-3 rounded-xl border-2 focus:ring-4 outline-none transition-all cursor-pointer shadow-sm appearance-none relative",
+                                                        order.status === 'pending' ? "bg-orange-50 text-orange-600 border-orange-200 focus:ring-orange-500/20" :
+                                                        order.status === 'processing' ? "bg-blue-50 text-blue-600 border-blue-200 focus:ring-blue-500/20" :
+                                                        order.status === 'shipped' ? "bg-purple-50 text-purple-600 border-purple-200 focus:ring-purple-500/20" :
+                                                        "bg-green-50 text-green-600 border-green-200 focus:ring-green-500/20"
+                                                      )}
+                                                    >
+                                                      <option value="pending">Pending</option>
+                                                      <option value="processing">Processing</option>
+                                                      <option value="shipped">Shipped</option>
+                                                      <option value="delivered">Delivered</option>
+                                                    </select>
+                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
-                                            <div className="space-y-4 bg-gray-50 p-4 rounded-xl">
-                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                                                    <Users size={14} className="text-orange-500" />
-                                                    Customer Info
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                            <div className="space-y-6 bg-[#f8f9fa] p-6 rounded-[1.5rem] border border-gray-100">
+                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-200 pb-3">
+                                                    <User size={14} className="text-gray-900" />
+                                                    Customer Details
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <div className="space-y-0.5">
-                                                        <p className="text-[10px] uppercase text-gray-400 font-bold">Name</p>
-                                                        <p className="font-bold text-gray-800 text-sm">{order.customer.name}</p>
+                                                <div className="space-y-4">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-black text-gray-500 text-xs mt-0.5 shadow-sm">
+                                                            {order.customer.name.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-black text-gray-900 text-sm">{order.customer.name}</p>
+                                                            <p className="text-gray-500 font-bold text-xs mt-0.5 flex items-center gap-1"><Phone size={10}/> {order.customer.phone}</p>
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-0.5">
-                                                        <p className="text-[10px] uppercase text-gray-400 font-bold">Contact</p>
-                                                        <p className="text-gray-700 font-medium">{order.customer.phone}</p>
+                                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                                        <p className="text-[10px] uppercase text-gray-400 font-black mb-1 flex items-center gap-1"><MapPin size={10}/> Shipping Address</p>
+                                                        <p className="text-gray-700 text-sm font-medium leading-relaxed">{order.customer.address}</p>
                                                     </div>
-                                                    <div className="space-y-0.5">
-                                                        <p className="text-[10px] uppercase text-gray-400 font-bold">Shipping Address</p>
-                                                        <p className="text-gray-600 text-xs leading-relaxed">{order.customer.address}</p>
-                                                    </div>
-                                                    <div className="pt-2">
-                                                        <span className="text-[9px] bg-gray-200 text-gray-600 font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                                                            Method: {order.paymentMethod === 'cod' ? 'Cash On Delivery' : order.paymentMethod.toUpperCase()}
+                                                    <div className="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm">
+                                                        <span className="text-[10px] uppercase text-gray-400 font-black">Payment</span>
+                                                        <span className="text-[10px] bg-green-100 text-green-700 font-black px-2 py-1 rounded-md uppercase tracking-wider">
+                                                            {order.paymentMethod === 'cod' ? 'Cash On Delivery' : order.paymentMethod}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="md:col-span-2 space-y-4">
-                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                                                    <ShoppingCart size={14} className="text-orange-500" />
-                                                    Order Items ({order.items.length})
+                                            
+                                            <div className="lg:col-span-2 space-y-6">
+                                                <div className="flex items-center justify-between text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-100 pb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <ShoppingCart size={14} className="text-gray-900" />
+                                                        Purchased Items ({order.items.length})
+                                                    </div>
+                                                    <span>Total: {formatPrice(order.total)}</span>
                                                 </div>
-                                                <div className="border border-gray-100 rounded-xl overflow-hidden">
-                                                    <table className="w-full text-xs text-left">
-                                                        <thead className="bg-gray-50 text-gray-400">
-                                                            <tr>
-                                                                <th className="px-4 py-2 font-bold uppercase">Item</th>
-                                                                <th className="px-4 py-2 font-bold uppercase text-center">Qty</th>
-                                                                <th className="px-4 py-2 font-bold uppercase text-right">Unit</th>
-                                                                <th className="px-4 py-2 font-bold uppercase text-right">Total</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="divide-y divide-gray-50">
-                                                            {order.items.map((item, idx) => (
-                                                                <tr key={idx} className="bg-white">
-                                                                    <td className="px-4 py-3 font-bold text-gray-800">{item.name}</td>
-                                                                    <td className="px-4 py-3 text-center">{item.quantity}</td>
-                                                                    <td className="px-4 py-3 text-right">{formatPrice(item.price)}</td>
-                                                                    <td className="px-4 py-3 text-right font-black">{formatPrice(item.price * item.quantity)}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
+                                                <div className="grid grid-cols-1 gap-3">
+                                                    {order.items.map((item, idx) => (
+                                                        <div key={idx} className="flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors p-4 rounded-2xl border border-transparent hover:border-gray-200">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-12 h-12 bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                                                                     {item.image ? (
+                                                                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                                                     ) : (
+                                                                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400"><ShoppingBag size={16}/></div>
+                                                                     )}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-gray-900 text-sm">{item.name}</p>
+                                                                    <p className="text-gray-500 font-bold text-[10px] uppercase tracking-wider mt-0.5">
+                                                                        Qty: {item.quantity} × {formatPrice(item.price)}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <p className="font-black text-gray-900 text-lg">{formatPrice(item.price * item.quantity)}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <div className="mt-6 flex flex-wrap gap-4 pt-6 border-t border-gray-100">
+                                                    <button 
+                                                        onClick={() => generateInvoice(order)}
+                                                        className="px-6 py-4 bg-gray-100 text-gray-700 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-gray-200 hover:shadow-md"
+                                                    >
+                                                        <Printer size={16} /> View/Print Invoice
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                          if(window.confirm('Permanently delete this order record? This cannot be undone.')) {
+                                                            setOrders(prev => prev.filter(o => o.id !== order.id));
+                                                            import('firebase/firestore').then(({ doc, deleteDoc }) => {
+                                                                import('../lib/firebase').then(({ db }) => {
+                                                                    deleteDoc(doc(db, 'orders', order.id)).catch(console.error);
+                                                                });
+                                                            });
+                                                          }
+                                                        }}
+                                                        className="px-6 py-4 bg-red-50 text-red-600 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-red-100 hover:shadow-md ml-auto"
+                                                    >
+                                                        <Trash2 size={16} /> Delete Order
+                                                    </button>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                                            <button 
-                                                onClick={() => {
-                                                  if (window.confirm('Mark this order as delivered?')) {
-                                                    setOrders(prev => prev.map(o => o.id === order.id ? {...o, status: 'delivered'} : o));
-                                                  }
-                                                }}
-                                                className="grow py-3 bg-gray-900 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-500 hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300"
-                                            >
-                                                <CheckCircle size={16} /> Update Fulfillment Status
-                                            </button>
-                                            <button 
-                                                onClick={() => generateInvoice(order)}
-                                                className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-gray-200"
-                                            >
-                                                <Printer size={16} /> Export Invoice PDF
-                                            </button>
-                                            <button 
-                                                onClick={() => {
-                                                  if(window.confirm('Permanently delete this order record?')) {
-                                                    setOrders(prev => prev.filter(o => o.id !== order.id));
-                                                  }
-                                                }}
-                                                className="px-6 py-3 bg-red-50 text-red-500 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-red-100"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
                                         </div>
                                     </div>
                                 ))}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { CreditCard, Truck, ShieldCheck, CheckCircle, Smartphone, Wallet, Banknote, Download } from 'lucide-react';
+import { CreditCard, Truck, ShieldCheck, CheckCircle, Smartphone, Wallet, Banknote, Download, MessageCircle, MessageSquare, Phone } from 'lucide-react';
 import { formatPrice, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Order } from '../types';
@@ -29,8 +29,12 @@ const CheckoutPage: React.FC = () => {
   const c = settings.customization?.colors;
   const l = settings.customization?.layout;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [encodedMsg, setEncodedMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     const finalCustomer = formData.name ? formData : {
         name: 'Demo Customer',
@@ -48,13 +52,38 @@ const CheckoutPage: React.FC = () => {
       status: 'pending',
       createdAt: new Date().toISOString()
     };
+    
+    const itemsList = cart.map(item => `${item.name} (Qty: ${item.quantity})`).join('\n');
+    const message = `🚀 *Order Confirmation*\n-------------------------\n📦 *Items:*\n${itemsList}\n-------------------------\n👤 *Customer:* ${finalCustomer.name}\n📱 *Phone:* ${finalCustomer.phone}\n📍 *Location:* ${finalCustomer.address}\n-------------------------\n💰 *Final Bill:* ${total} BDT`;
+    
+    const encoded = encodeURIComponent(message);
+    setEncodedMsg(encoded);
+    const whatsappUrl = `https://wa.me/8801771357329?text=${encoded}`;
 
-    addOrder(newOrder);
-    setLastOrder(newOrder);
-    setIsSuccess(true);
-    setTimeout(() => {
-      clearCart();
-    }, 100);
+    try {
+      const { db } = await import('../lib/firebase');
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      
+      await addDoc(collection(db, 'orders'), {
+        ...newOrder,
+        serverTimestamp: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Order Backup Failed:", error);
+    } finally {
+      addOrder(newOrder);
+      setLastOrder(newOrder);
+      setTimeout(() => {
+        try {
+          window.open(whatsappUrl, '_blank');
+        } catch(e) {
+          console.error("Popup blocked", e);
+        }
+        setIsSubmitting(false);
+        setIsSuccess(true);
+        setTimeout(() => clearCart(), 100);
+      }, 500);
+    }
   };
 
   if (cart.length === 0 && !isSuccess) {
@@ -69,16 +98,46 @@ const CheckoutPage: React.FC = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="container mx-auto px-4 py-20 flex flex-col items-center text-center space-y-6"
       >
-        <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center animate-bounce">
+        <div className="w-20 h-20 bg-green-100 text-green-500 rounded-[2rem] flex items-center justify-center animate-bounce shadow-xl">
           <CheckCircle size={48} />
         </div>
-        <div className="space-y-2">
-            <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tight">{t('অর্ডার সাকসেসফুল!', 'Order Placed!')}</h1>
-            <p className="text-gray-500 max-w-sm mx-auto">
-                {t('আপনার অর্ডারটির জন্য ধন্যবাদ। আমরা এটি পেয়েছি এবং অবিলম্বে এটি প্রসেস করা শুরু করব। আপনি শীঘ্রই একটি নিশ্চিতকরণ কল পাবেন।', 'Thank you for your order. We have received it and will start processing it immediately. You will receive a confirmation call shortly.')}
+        <div className="space-y-4 max-w-lg">
+            <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tight">Order Placed Successfully!</h1>
+            <p className="text-gray-500 mx-auto">
+                We will contact you soon. Please choose an app below to send your order details directly to our manager.
             </p>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm w-full max-w-md">
+
+        <div className="w-full max-w-md space-y-3 mb-4">
+             <button
+                onClick={() => window.open(`https://wa.me/8801771357329?text=${encodedMsg}`, '_blank')}
+                className="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black uppercase tracking-wider text-[11px] rounded-2xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+             >
+                <MessageCircle size={18} /> Send via WhatsApp
+             </button>
+             <button
+                onClick={() => {
+                    navigator.clipboard.writeText(decodeURIComponent(encodedMsg));
+                    alert("Message copied! Please paste it in IMO.");
+                    window.open('intent://#Intent;scheme=imo;package=com.imo.android.imoim;end', '_blank');
+                }}
+                className="w-full py-4 bg-sky-500 hover:bg-sky-600 text-white font-black uppercase tracking-wider text-[11px] rounded-2xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+             >
+                <Phone size={18} /> Send via IMO
+             </button>
+             <button
+                onClick={() => {
+                    navigator.clipboard.writeText(decodeURIComponent(encodedMsg));
+                    alert("Message copied! Please paste it in Messenger.");
+                    window.open('https://m.me/', '_blank');
+                }}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider text-[11px] rounded-2xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+             >
+                <MessageSquare size={18} /> Send via Messenger
+             </button>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm w-full max-w-md mt-4">
              <div className="flex justify-between text-sm mb-2">
                  <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">{t('অর্ডার আইডি', 'Order ID')}</span>
                  <span className="font-black">#MIX-{Math.floor(Math.random() * 100000)}</span>
@@ -89,22 +148,21 @@ const CheckoutPage: React.FC = () => {
              </div>
         </div>
         
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 w-full max-w-md">
             <button 
                 onClick={() => lastOrder && generateInvoicePDF(lastOrder)}
-                className="flex items-center justify-center gap-2 px-10 py-4 font-black uppercase tracking-widest text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                className="flex items-center justify-center gap-2 px-10 py-5 font-black uppercase tracking-widest text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors w-full"
             >
                 <Download size={20} /> {t('ইনভয়েস ডাউনলোড করুন', 'Download Invoice PDF')}
             </button>
             <button 
                 onClick={() => navigate('/')}
-                className="px-10 py-4 font-black uppercase tracking-widest text-white rounded-xl shadow-xl transition-transform hover:scale-105 active:scale-95"
+                className="px-10 py-5 font-black uppercase tracking-widest text-white rounded-2xl shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98] w-full"
                 style={{ 
-                  backgroundColor: c?.primary || settings.primaryColor,
-                  borderRadius: `${l?.buttonRadius || 12}px`
+                  backgroundColor: c?.primary || settings.primaryColor
                 }}
             >
-                {t('কেনাকাটায় ফিরে যান', 'Return to Shopping')}
+                {t('শপিং চালিয়ে যান', 'Continue Shopping')}
             </button>
         </div>
       </motion.div>

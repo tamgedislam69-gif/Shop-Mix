@@ -123,6 +123,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return localStorage.getItem('sm_isAdmin') === 'true';
   });
 
+  useEffect(() => {
+    async function fetchOrders() {
+      if (isAdmin) {
+        try {
+          const { db } = await import('../lib/firebase');
+          const { collection, onSnapshot, query, orderBy } = await import('firebase/firestore');
+          const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+          const unsubscribe = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            })) as Order[];
+            setOrders(data);
+          });
+          return unsubscribe;
+        } catch (error) {
+          console.error("Error fetching orders from Firestore:", error);
+        }
+      }
+    }
+    let unsub: any;
+    fetchOrders().then(u => unsub = u);
+    return () => {
+      if (unsub && typeof unsub === 'function') unsub();
+    };
+  }, [isAdmin]);
+
   const [checkoutDrawerOpen, setCheckoutDrawerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
