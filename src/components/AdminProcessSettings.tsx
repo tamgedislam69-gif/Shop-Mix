@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Settings, X, Grid, Image as ImageIcon, Palette, 
   Layout, Moon, Sun, Monitor, Clock, Plus, Trash2,
-  ChevronRight, RefreshCw, Zap, Code2, Sparkles, Upload
+  ChevronRight, RefreshCw, Zap, Code2, Sparkles, Upload, Loader2
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
@@ -51,6 +51,8 @@ export const AdminProcessSettings: React.FC = () => {
     const saved = localStorage.getItem('is_drawer_pin_enabled');
     return saved === null ? true : saved === 'true';
   });
+
+  const [uploadingIndexes, setUploadingIndexes] = useState<Record<number, boolean>>({});
 
   const c = settings.customization || INITIAL_SETTINGS.customization!;
 
@@ -118,6 +120,35 @@ export const AdminProcessSettings: React.FC = () => {
     const urls = [...(c.carousel?.urls || [])];
     urls[index] = val;
     updateNested('customization.carousel.urls', urls);
+  };
+
+  const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingIndexes(prev => ({ ...prev, [index]: true }));
+
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('key', 'ea1036a8338df238983a385601265de4');
+
+    try {
+      const response = await fetch('https://api.imgbb.com/1/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.success) {
+        updateCarouselUrl(index, data.data.url);
+      } else {
+        alert("Upload failed. Please try again.");
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert("Error uploading image.");
+    } finally {
+      setUploadingIndexes(prev => ({ ...prev, [index]: false }));
+    }
   };
 
   return (
@@ -437,19 +468,39 @@ export const AdminProcessSettings: React.FC = () => {
 
                        <div className="space-y-3">
                           {(c.carousel?.urls || []).map((url, idx) => (
-                            <div key={idx} className="flex gap-2 group">
-                              <div className="grow relative">
-                                <ImageIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <div key={idx} className="flex gap-3 group items-center bg-gray-50 border border-gray-100 rounded-xl p-2 relative overflow-hidden transition-all hover:border-gray-300">
+                              {uploadingIndexes[idx] ? (
+                                <div className="h-14 w-24 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
+                                  <Loader2 className="animate-spin text-gray-500" size={20} />
+                                </div>
+                              ) : url ? (
+                                <div className="h-14 w-24 bg-gray-200 rounded-lg overflow-hidden shrink-0 shadow-inner">
+                                  <img src={url} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="h-14 w-24 bg-gray-200 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
+                                  <ImageIcon size={20} className="text-gray-400" />
+                                </div>
+                              )}
+                              
+                              <div className="grow relative h-10 flex items-center">
                                 <input 
-                                  value={url}
-                                  onChange={(e) => updateCarouselUrl(idx, e.target.value)}
-                                  placeholder="https://..."
-                                  className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 pl-10 pr-4 text-xs font-bold focus:ring-2 focus:ring-black outline-none transition-all"
+                                  type="file"
+                                  accept="image/*"
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                  onChange={(e) => handleImageUpload(idx, e)}
+                                  disabled={uploadingIndexes[idx]}
                                 />
+                                <div className="flex items-center gap-2 text-xs font-bold text-gray-700 bg-white border border-gray-200 px-4 py-2.5 rounded-lg shadow-sm whitespace-nowrap overflow-hidden">
+                                  <Upload size={14} className="shrink-0" /> 
+                                  <span className="truncate">{url ? 'Replace Image' : 'Select Image...'}</span>
+                                </div>
                               </div>
+                              
                               <button 
                                 onClick={() => removeCarouselUrl(idx)}
-                                className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                                className="w-10 h-10 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0 relative z-20"
+                                disabled={uploadingIndexes[idx]}
                               >
                                 <Trash2 size={16} />
                               </button>
