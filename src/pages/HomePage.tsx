@@ -238,7 +238,7 @@ const HomePage: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="flex flex-col w-full min-h-screen pb-16"
+      className="flex flex-col w-full pb-16 gap-0"
     >
       <Helmet>
         <title>{settings.customization?.text?.websiteName || settings.logoText} | {t('বাংলাদেশের সেরা ই-কমার্স প্ল্যাটফর্ম', "Bangladesh's Most Elegant Shopping Destination")}</title>

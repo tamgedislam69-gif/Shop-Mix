@@ -25,6 +25,7 @@ export interface Product {
   name: string;
   price: number;
   originalPrice?: number;
+  discountPercentage?: number;
   image: string;
   showImage?: boolean;
   gallery?: string[];
@@ -40,6 +41,8 @@ export interface Product {
     colors: ProductVariant[];
     sizes: ProductVariant[];
   };
+  sizes?: string[];
+  colors?: string[];
   views: number;
   affiliateLink?: string;
   isOwnInventory?: boolean;

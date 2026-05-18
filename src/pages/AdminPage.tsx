@@ -94,19 +94,34 @@ const AdminPage: React.FC = () => {
   const { products, setProducts, settings, updateSettings, orders, setOrders, analytics, logout } = useApp();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'settings' | 'site_settings' | 'orders' | 'media' | 'posts' | 'customization' | 'complaints'>('dashboard');
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'image' | 'video') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'image' | 'video' | 'gallery') => {
     const file = e.target.files?.[0];
     if (!file || !editingProduct) return;
 
     setIsUploading(true);
     try {
-      const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
-      
-      if (target === 'image') {
-        setEditingProduct({ ...editingProduct, image: url });
+      if (target === 'image' || target === 'gallery') {
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=ea1036a8338df238983a385601265de4`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data && data.success) {
+           const url = data.data.url;
+           if (target === 'image') {
+             setEditingProduct({ ...editingProduct, image: url });
+           } else {
+             setEditingProduct({ ...editingProduct, gallery: [...(editingProduct.gallery || []), url] });
+           }
+        } else {
+           throw new Error(data.error?.message || 'Upload failed');
+        }
       } else {
+        const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(snapshot.ref);
         setEditingProduct({ ...editingProduct, videoUrl: url });
       }
     } catch (error) {
@@ -1002,76 +1017,81 @@ const AdminPage: React.FC = () => {
                                         {editingProduct.id ? 'Edit Product' : 'New Product'}
                                     </h3>
                                     <form onSubmit={handleSaveProduct} className="grid grid-cols-1 gap-8">
-    {/* 1. Basic Info */}
+    
+    {/* 1. Product Media */}
     <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">1. Basic Info</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Product Name</label>
-                <input required className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.name} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} />
-            </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">SKU / Product Code</label>
-                <input className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.sku || ''} onChange={e => setEditingProduct({...editingProduct, sku: e.target.value})} placeholder="e.g. PROD-001" />
-            </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Category</label>
-                <select className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all appearance-none cursor-pointer" value={editingProduct.category} onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}>
-                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-            </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Stock Units</label>
-                <input type="number" required className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-mono outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.stock} onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})} />
-            </div>
-        </div>
-
-    </div>
-
-    {/* 2. Media with Toggles */}
-    <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">2. Product Media</h4>
+        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">1. Product Media</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4 relative">
                 <div className="flex items-center justify-between px-1">
                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Main Cover Image</label>
-                    <button type="button" onClick={() => setEditingProduct({...editingProduct, showImage: editingProduct.showImage !== false ? false : true})} className={cn("w-10 h-5 rounded-full p-1 transition-colors duration-300", editingProduct.showImage !== false ? "bg-orange-500" : "bg-gray-300")}>
-                        <div className={cn("w-3 h-3 bg-white rounded-full transition-transform duration-300", editingProduct.showImage !== false ? "translate-x-5" : "translate-x-0")} />
-                    </button>
                 </div>
-                {editingProduct.showImage !== false && (
-                    <>
-                        <div onClick={() => fileInputRef.current?.click()} className="w-full h-48 border-2 border-dashed border-gray-200 rounded-[2rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden">
-                            {editingProduct.image ? (
-                                <>
-                                    <img loading="lazy" src={editingProduct.image || undefined} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <Upload className="text-white" size={24} />
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors">
-                                        <Upload size={20} />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-orange-500">Upload Image</span>
-                                </>
-                            )}
-                            {isUploading && (
-                                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-                                    <Loader2 className="animate-spin text-orange-500" size={24} />
-                                </div>
-                            )}
+                <div onClick={() => fileInputRef.current?.click()} className="w-full h-48 border-2 border-dashed border-gray-300 rounded-[2rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden">
+                    {editingProduct.image ? (
+                        <>
+                            <img loading="lazy" src={editingProduct.image} className="w-full h-full object-contain p-2" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Upload className="text-white" size={24} />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                                <Upload size={20} />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-orange-500">Upload Cover (ImgBB)</span>
+                        </>
+                    )}
+                    {isUploading && (
+                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                            <Loader2 className="animate-spin text-orange-500" size={24} />
                         </div>
-                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'image')} />
-                        <input className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 text-[10px] font-mono outline-none focus:border-orange-500 focus:ring-2" value={editingProduct.image} onChange={e => setEditingProduct({...editingProduct, image: e.target.value})} placeholder="Or paste URL here..." />
-                    </>
-                )}
+                    )}
+                </div>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'image')} />
+                <input className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 text-[10px] font-mono outline-none focus:border-orange-500 focus:ring-2" value={editingProduct.image} onChange={e => setEditingProduct({...editingProduct, image: e.target.value})} placeholder="Or paste Cover URL here..." />
             </div>
 
             <div className="space-y-4 relative">
                 <div className="flex items-center justify-between px-1">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Cinematic Video</label>
+                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Product Gallery (Extra Images)</label>
+                </div>
+                <div className="w-full h-48 border-2 border-dashed border-gray-300 rounded-[2rem] bg-white p-2 overflow-y-auto relative">
+                    <div className="grid grid-cols-3 gap-2 h-full">
+                        {editingProduct.gallery?.map((url, idx) => (
+                            <div key={idx} className="relative group rounded-xl overflow-hidden aspect-square border border-gray-200 bg-gray-50">
+                                <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                                <button type="button" onClick={() => {
+                                    const newGallery = [...(editingProduct.gallery || [])];
+                                    newGallery.splice(idx, 1);
+                                    setEditingProduct({...editingProduct, gallery: newGallery});
+                                }} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                    <Trash2 className="text-white" size={16} />
+                                </button>
+                            </div>
+                        ))}
+                        <button type="button" onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/*';
+                            input.onchange = (e) => handleFileUpload(e as any, 'gallery');
+                            input.click();
+                        }} className="aspect-square rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 hover:border-orange-500 hover:text-orange-500 text-gray-400 transition-colors">
+                            <Plus size={20} />
+                            <span className="text-[8px] font-black uppercase tracking-widest">Add</span>
+                        </button>
+                    </div>
+                    {isUploading && (
+                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                            <Loader2 className="animate-spin text-orange-500" size={24} />
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="space-y-4 relative md:col-span-2">
+                <div className="flex items-center justify-between px-1">
+                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Cinematic Video (Optional)</label>
                     <button type="button" onClick={() => setEditingProduct({...editingProduct, showVideo: !editingProduct.showVideo})} className={cn("w-10 h-5 rounded-full p-1 transition-colors duration-300", editingProduct.showVideo ? "bg-orange-500" : "bg-gray-300")}>
                         <div className={cn("w-3 h-3 bg-white rounded-full transition-transform duration-300", editingProduct.showVideo ? "translate-x-5" : "translate-x-0")} />
                     </button>
@@ -1082,7 +1102,7 @@ const AdminPage: React.FC = () => {
                             const input = document.createElement('input');
                             input.type = 'file';
                             input.accept = 'video/*';
-                            input.onchange = (e) => handleFileUpload(e, 'video');
+                            input.onchange = (e) => handleFileUpload(e as any, 'video');
                             input.click();
                         }} className="w-full h-48 border-2 border-dashed border-gray-200 rounded-[2rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden">
                             {editingProduct.videoUrl ? (
@@ -1108,6 +1128,35 @@ const AdminPage: React.FC = () => {
         </div>
     </div>
 
+    {/* 2. Basic Info & Search */}
+    <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
+        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">2. Basic Info & Search Indexing</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Product Name</label>
+                <input required className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.name} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">SKU / Product Code</label>
+                <input className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.sku || ''} onChange={e => setEditingProduct({...editingProduct, sku: e.target.value})} placeholder="e.g. PROD-001" />
+            </div>
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Category</label>
+                <select className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all appearance-none cursor-pointer" value={editingProduct.category} onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}>
+                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+            </div>
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Stock Units</label>
+                <input type="number" required className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-mono outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.stock} onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Description (Text Area)</label>
+                <textarea className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all resize-y min-h-[120px]" value={editingProduct.description} onChange={e => setEditingProduct({...editingProduct, description: e.target.value})} placeholder="Product clean text description..." />
+            </div>
+        </div>
+    </div>
+
     {/* 3. Smart Pricing */}
     <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
         <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">3. Smart Pricing</h4>
@@ -1116,40 +1165,27 @@ const AdminPage: React.FC = () => {
                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Original Price (BDT)</label>
                 <input type="number" required className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-mono font-bold outline-none focus:border-orange-500" value={editingProduct.originalPrice || editingProduct.price} onChange={e => {
                     const op = Number(e.target.value);
-                    setEditingProduct({...editingProduct, originalPrice: op, price: op});
+                    const dp = editingProduct.discountPercentage || 0;
+                    setEditingProduct({...editingProduct, originalPrice: op, price: Math.round(op - (op * (dp / 100)))});
                 }} />
             </div>
             
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Apply Discount (%)</label>
-                    <button type="button" id="toggle-discount" onClick={() => {
-                        const isApplying = !editingProduct.originalPrice || editingProduct.originalPrice === editingProduct.price;
-                        if (isApplying && editingProduct.originalPrice) {
-                            setEditingProduct({...editingProduct, price: Math.round(editingProduct.originalPrice * 0.9)});
-                        } else {
-                            setEditingProduct({...editingProduct, price: editingProduct.originalPrice || editingProduct.price});
-                        }
-                    }} className={cn("w-8 h-4 rounded-full p-1 transition-colors duration-300", (editingProduct.originalPrice && editingProduct.price < editingProduct.originalPrice) ? "bg-orange-500" : "bg-gray-300")}>
-                        <div className={cn("w-2 h-2 bg-white rounded-full transition-transform duration-300", (editingProduct.originalPrice && editingProduct.price < editingProduct.originalPrice) ? "translate-x-4" : "translate-x-0")} />
-                    </button>
+                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Discount (%)</label>
                 </div>
-                {(editingProduct.originalPrice && editingProduct.price < editingProduct.originalPrice) ? (
-                    <div className="relative">
-                        <input type="number" className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-mono font-bold outline-none focus:border-orange-500 pr-10" 
-                            value={Math.round((1 - editingProduct.price / editingProduct.originalPrice) * 100)}
-                            onChange={e => {
-                                const pct = Number(e.target.value);
-                                if (pct >= 0 && pct <= 100) {
-                                    setEditingProduct({...editingProduct, price: Math.round(editingProduct.originalPrice! * (1 - pct/100))});
-                                }
-                            }}
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">%</span>
-                    </div>
-                ) : (
-                    <div className="w-full bg-gray-100 border border-gray-200 rounded-xl py-3 px-4 text-gray-400 font-bold text-center">No Discount</div>
-                )}
+                <div className="relative">
+                    <input type="number" className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-mono font-bold outline-none focus:border-orange-500 pr-10" 
+                        value={editingProduct.discountPercentage || 0}
+                        onChange={e => {
+                            let pct = Number(e.target.value);
+                            if (pct < 0) pct = 0; if (pct > 100) pct = 100;
+                            const op = editingProduct.originalPrice || editingProduct.price;
+                            setEditingProduct({...editingProduct, discountPercentage: pct, originalPrice: op, price: Math.round(op - (op * (pct / 100)))});
+                        }}
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">%</span>
+                </div>
             </div>
 
             <div className="space-y-2">
@@ -1161,7 +1197,6 @@ const AdminPage: React.FC = () => {
 
     {/* 4. Product Strategy (The Master Logic) */}
     <div className="p-8 bg-[#1a1a1a] text-white rounded-[2rem] border border-gray-800 shadow-2xl relative overflow-hidden group space-y-6">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 blur-[80px] -mr-32 -mt-32 group-hover:bg-orange-500/20 transition-colors duration-500 pointer-events-none"></div>
         <h4 className="text-xs font-black uppercase tracking-[0.2em] text-orange-500 mb-2 relative z-10">4. Product Strategy</h4>
         
         <div className="flex bg-gray-800 p-1 rounded-xl w-fit relative z-10">
@@ -1193,14 +1228,14 @@ const AdminPage: React.FC = () => {
                         <span>Sizes (Custom Input)</span>
                     </label>
                     <div className="flex gap-2">
-                        <input id="custom-size-input-new" className="flex-grow bg-gray-900 border border-gray-700 rounded-xl py-3 px-4 focus:border-orange-500 outline-none font-bold placeholder:text-gray-600 focus:ring-2 focus:ring-orange-500/20" placeholder="Type ANY size (e.g., S, M, XL, 26, 44) and press Enter" onKeyDown={e => {
+                        <input id="custom-size-input-new" className="flex-grow bg-gray-900 border border-gray-700 rounded-xl py-3 px-4 focus:border-orange-500 outline-none font-bold placeholder:text-gray-600 focus:ring-2 focus:ring-orange-500/20" placeholder="Type ANY size (e.g., S, M, L or 28, 30, 32) and press Enter" onKeyDown={e => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
                                 const val = e.currentTarget.value.trim().toUpperCase();
                                 if (!val) return;
-                                const currentSizes = editingProduct.variants?.sizes || [];
-                                if (currentSizes.some(s => s.name === val)) { e.currentTarget.value = ''; return; }
-                                setEditingProduct({...editingProduct, enableSizes: true, variants: {...(editingProduct.variants || {colors: [], sizes: []}), sizes: [...currentSizes, { id: 's-'+Date.now(), name: val, priceModifier: 0 }]}});
+                                const currentSizes = editingProduct.sizes || [];
+                                if (currentSizes.includes(val)) { e.currentTarget.value = ''; return; }
+                                setEditingProduct({...editingProduct, enableSizes: true, sizes: [...currentSizes, val]});
                                 e.currentTarget.value = '';
                             }
                         }} />
@@ -1209,20 +1244,20 @@ const AdminPage: React.FC = () => {
                             if(!input) return;
                             const val = input.value.trim().toUpperCase();
                             if (!val) return;
-                            const currentSizes = editingProduct.variants?.sizes || [];
-                            if (currentSizes.some(s => s.name === val)) { input.value = ''; return; }
-                            setEditingProduct({...editingProduct, enableSizes: true, variants: {...(editingProduct.variants || {colors: [], sizes: []}), sizes: [...currentSizes, { id: 's-'+Date.now(), name: val, priceModifier: 0 }]}});
+                            const currentSizes = editingProduct.sizes || [];
+                            if (currentSizes.includes(val)) { input.value = ''; return; }
+                            setEditingProduct({...editingProduct, enableSizes: true, sizes: [...currentSizes, val]});
                             input.value = '';
                         }} className="bg-gray-800 text-white px-6 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 hover:text-white transition-colors border border-gray-700 hover:border-orange-500">
                             Add Size
                         </button>
                     </div>
-                    {editingProduct.variants?.sizes && editingProduct.variants.sizes.length > 0 && (
+                    {editingProduct.sizes && editingProduct.sizes.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-4">
-                            {editingProduct.variants.sizes.map(s => (
-                                <div key={s.id} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-tr from-gray-800 to-gray-700 text-white rounded-full border border-gray-600 shadow-md">
-                                    <span className="text-xs font-black tracking-widest">{s.name}</span>
-                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: {...editingProduct.variants!, sizes: editingProduct.variants!.sizes.filter(item => item.id !== s.id)}})} className="text-gray-300 hover:text-red-400 transition-colors ml-1"><Trash2 size={14}/></button>
+                            {editingProduct.sizes.map(s => (
+                                <div key={s} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-tr from-gray-800 to-gray-700 text-white rounded-full border border-gray-600 shadow-md">
+                                    <span className="text-xs font-black tracking-widest">{s}</span>
+                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, sizes: editingProduct.sizes!.filter(item => item !== s)})} className="text-gray-300 hover:text-red-400 transition-colors ml-1"><Trash2 size={14}/></button>
                                 </div>
                             ))}
                         </div>
@@ -1232,17 +1267,52 @@ const AdminPage: React.FC = () => {
                 {/* 5. Custom Colors */}
                 <div className="space-y-4 bg-gray-900/50 p-6 rounded-2xl border border-gray-800">
                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest flex items-center justify-between">
-                        <span>Colors (Custom Input)</span>
+                        <span>Colors (Preset Palette & Custom)</span>
                     </label>
+                    <div className="grid grid-cols-6 sm:grid-cols-10 gap-2 mb-4">
+                        {[
+                            { name: 'Black', hex: '#000000' }, { name: 'White', hex: '#FFFFFF' }, { name: 'Gray', hex: '#808080' },
+                            { name: 'Silver', hex: '#C0C0C0' }, { name: 'Red', hex: '#FF0000' }, { name: 'Maroon', hex: '#800000' },
+                            { name: 'Blue', hex: '#0000FF' }, { name: 'Navy', hex: '#000080' }, { name: 'Cyan', hex: '#00FFFF' },
+                            { name: 'Green', hex: '#008000' }, { name: 'Olive', hex: '#808000' }, { name: 'Lime', hex: '#00FF00' },
+                            { name: 'Yellow', hex: '#FFFF00' }, { name: 'Orange', hex: '#FFA500' }, { name: 'Purple', hex: '#800080' },
+                            { name: 'Pink', hex: '#FFC0CB' }, { name: 'Gold', hex: '#FFD700' }, { name: 'Brown', hex: '#A52A2A' },
+                            { name: 'Teal', hex: '#008080' }
+                        ].map(c => {
+                            const isSelected = editingProduct.colors?.includes(c.name);
+                            return (
+                                <button
+                                    key={c.name}
+                                    type="button"
+                                    onClick={() => {
+                                        const currentColors = editingProduct.colors || [];
+                                        if (isSelected) {
+                                            setEditingProduct({ ...editingProduct, colors: currentColors.filter(item => item !== c.name) });
+                                        } else {
+                                            if (!currentColors.includes(c.name)) {
+                                                setEditingProduct({ ...editingProduct, enableColors: true, colors: [...currentColors, c.name] });
+                                            }
+                                        }
+                                    }}
+                                    className={cn("w-full aspect-square rounded-lg border-2 shadow-sm transition-all relative group", isSelected ? "border-orange-500 scale-110" : "border-transparent hover:border-gray-500 hover:scale-105")}
+                                    style={{ backgroundColor: c.hex }}
+                                    title={c.name}
+                                >
+                                    {isSelected && <div className={cn("absolute inset-0 flex items-center justify-center", c.hex === '#FFFFFF' || c.hex === '#FFFF00' ? "text-black" : "text-white")}><CheckCircle2 size={16} /></div>}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    
                     <div className="flex gap-2">
-                        <input id="custom-color-input-new" className="flex-grow bg-gray-900 border border-gray-700 rounded-xl py-3 px-4 focus:border-orange-500 outline-none font-bold placeholder:text-gray-600 focus:ring-2 focus:ring-orange-500/20" placeholder="Type ANY color name (e.g., Midnight Blue) and press Enter" onKeyDown={e => {
+                        <input id="custom-color-input-new" className="flex-grow bg-gray-900 border border-gray-700 rounded-xl py-3 px-4 focus:border-orange-500 outline-none font-bold placeholder:text-gray-600 focus:ring-2 focus:ring-orange-500/20" placeholder="Or type ANY color name (e.g., Midnight Blue) and press Enter" onKeyDown={e => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
                                 const val = e.currentTarget.value.trim();
                                 if (!val) return;
-                                const currentColors = editingProduct.variants?.colors || [];
-                                if (currentColors.some(c => c.name.toLowerCase() === val.toLowerCase())) { e.currentTarget.value = ''; return; }
-                                setEditingProduct({...editingProduct, enableColors: true, variants: {...(editingProduct.variants || {colors: [], sizes: []}), colors: [...currentColors, { id: 'c-'+Date.now(), name: val, priceModifier: 0 }]}});
+                                const currentColors = editingProduct.colors || [];
+                                if (currentColors.some(c => c.toLowerCase() === val.toLowerCase())) { e.currentTarget.value = ''; return; }
+                                setEditingProduct({...editingProduct, enableColors: true, colors: [...currentColors, val]});
                                 e.currentTarget.value = '';
                             }
                         }} />
@@ -1251,21 +1321,21 @@ const AdminPage: React.FC = () => {
                             if(!input) return;
                             const val = input.value.trim();
                             if (!val) return;
-                            const currentColors = editingProduct.variants?.colors || [];
-                            if (currentColors.some(c => c.name.toLowerCase() === val.toLowerCase())) { input.value = ''; return; }
-                            setEditingProduct({...editingProduct, enableColors: true, variants: {...(editingProduct.variants || {colors: [], sizes: []}), colors: [...currentColors, { id: 'c-'+Date.now(), name: val, priceModifier: 0 }]}});
+                            const currentColors = editingProduct.colors || [];
+                            if (currentColors.some(c => c.toLowerCase() === val.toLowerCase())) { input.value = ''; return; }
+                            setEditingProduct({...editingProduct, enableColors: true, colors: [...currentColors, val]});
                             input.value = '';
                         }} className="bg-gray-800 text-white px-6 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 hover:text-white transition-colors border border-gray-700 hover:border-orange-500">
-                            Add Color
+                            Add Custom
                         </button>
                     </div>
-                    {editingProduct.variants?.colors && editingProduct.variants.colors.length > 0 && (
+                    {editingProduct.colors && editingProduct.colors.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-4">
-                            {editingProduct.variants.colors.map(c => (
-                                <div key={c.id} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-tr from-gray-800 to-gray-700 text-white rounded-full border border-gray-600 shadow-md">
-                                    <div className="w-4 h-4 rounded-full border border-gray-500/50 shadow-inner" style={{ backgroundColor: c.name.toLowerCase() }} />
-                                    <span className="text-xs font-black tracking-widest">{c.name}</span>
-                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: {...editingProduct.variants!, colors: editingProduct.variants!.colors.filter(item => item.id !== c.id)}})} className="text-gray-300 hover:text-red-400 transition-colors ml-1"><Trash2 size={14}/></button>
+                            {editingProduct.colors.map(c => (
+                                <div key={c} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-tr from-gray-800 to-gray-700 text-white rounded-full border border-gray-600 shadow-md">
+                                    <div className="w-4 h-4 rounded-full border border-gray-500/50 shadow-inner" style={{ backgroundColor: c.toLowerCase().replace(/[^a-z0-9]/g, '') }} />
+                                    <span className="text-xs font-black tracking-widest">{c}</span>
+                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, colors: editingProduct.colors!.filter(item => item !== c)})} className="text-gray-300 hover:text-red-400 transition-colors ml-1"><Trash2 size={14}/></button>
                                 </div>
                             ))}
                         </div>
@@ -1273,24 +1343,6 @@ const AdminPage: React.FC = () => {
                 </div>
             </div>
         )}
-    </div>
-
-    
-    {/* 6. Details */}
-    <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">6. Details</h4>
-        <div className="space-y-4">
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Short Description</label>
-                <input className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.shortDescription || ''} onChange={e => setEditingProduct({...editingProduct, shortDescription: e.target.value})} placeholder="A quick summary..." />
-            </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Rich Product Description</label>
-                <div className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                    <ReactQuill theme="snow" value={editingProduct.description} onChange={val => setEditingProduct({...editingProduct, description: val})} />
-                </div>
-            </div>
-        </div>
     </div>
 
     <div className="md:col-span-1 pt-6 flex flex-col gap-4">
