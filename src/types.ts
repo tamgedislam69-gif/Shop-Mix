@@ -193,7 +193,7 @@ export interface CustomizationSettings {
       subtitle?: string;
       titleColor?: string;
       subtitleColor?: string;
-      alignment?: 'tl' | 'tc' | 'tr' | 'cl' | 'cc' | 'cr' | 'bl' | 'bc' | 'br';
+      position?: { x: number; y: number };
       animation?: 'fade' | 'slideUp' | 'zoomIn';
     }[];
     duration: number;

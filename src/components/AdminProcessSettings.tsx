@@ -8,6 +8,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
 import { INITIAL_SETTINGS, THEME_PRESETS } from '../constants';
+import { DraggablePositioner } from './DraggablePositioner';
 
 const MASTER_THEMES = [
   {
@@ -475,7 +476,7 @@ export const AdminProcessSettings: React.FC = () => {
                       </div>
                       <input 
                         type="range"
-                        min="200"
+                        min="100"
                         max="650"
                         step="10"
                         value={c.carousel?.height || 400}
@@ -598,26 +599,7 @@ export const AdminProcessSettings: React.FC = () => {
                                      </div>
                                   </div>
                                   
-                                  <div className="space-y-2">
-                                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Alignment</label>
-                                     <select 
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-xs font-bold appearance-none"
-                                        value={config.alignment || 'cc'}
-                                        onChange={e => updateCarouselConfig(idx, 'alignment', e.target.value)}
-                                     >
-                                        <option value="tl">Top-Left</option>
-                                        <option value="tc">Top-Center</option>
-                                        <option value="tr">Top-Right</option>
-                                        <option value="cl">Center-Left</option>
-                                        <option value="cc">Center</option>
-                                        <option value="cr">Center-Right</option>
-                                        <option value="bl">Bottom-Left</option>
-                                        <option value="bc">Bottom-Center</option>
-                                        <option value="br">Bottom-Right</option>
-                                     </select>
-                                  </div>
-
-                                  <div className="space-y-2">
+                                  <div className="space-y-2 col-span-1 md:col-span-2">
                                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Animation</label>
                                      <select 
                                         className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-xs font-bold appearance-none"
@@ -628,6 +610,13 @@ export const AdminProcessSettings: React.FC = () => {
                                         <option value="slideUp">Slide Up</option>
                                         <option value="zoomIn">Zoom In</option>
                                      </select>
+                                  </div>
+
+                                  <div className="col-span-1 md:col-span-2 pt-2">
+                                     <DraggablePositioner 
+                                        position={config.position || { x: 50, y: 50 }} 
+                                        onChange={(pos) => updateCarouselConfig(idx, 'position', pos)} 
+                                     />
                                   </div>
                                 </div>
                               </div>

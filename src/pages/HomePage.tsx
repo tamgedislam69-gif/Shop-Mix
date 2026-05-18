@@ -141,21 +141,6 @@ const FlashSaleTimer: React.FC = () => {
   );
 };
 
-const getAlignmentClasses = (alignment = 'cc') => {
-  const map: Record<string, string> = {
-    'tl': 'justify-start items-start text-left',
-    'tc': 'justify-start items-center text-center',
-    'tr': 'justify-start items-end text-right',
-    'cl': 'justify-center items-start text-left',
-    'cc': 'justify-center items-center text-center',
-    'cr': 'justify-center items-end text-right',
-    'bl': 'justify-end items-start text-left',
-    'bc': 'justify-end items-center text-center',
-    'br': 'justify-end items-end text-right',
-  };
-  return map[alignment] || map['cc'];
-};
-
 const getAnimationVariants = (animType = 'fade') => {
   if (animType === 'slideUp') return { initial: { y: 50, opacity: 0 }, animate: { y: 0, opacity: 1 } };
   if (animType === 'zoomIn') return { initial: { scale: 0.5, opacity: 0 }, animate: { scale: 1, opacity: 1 } };
@@ -263,12 +248,14 @@ const HomePage: React.FC = () => {
 
       {/* Hero Section */}
       {vis?.heroBanner !== false && (() => {
-        const bannerHeight = carousel?.height || layout?.heroHeight || 600;
+        const bannerHeight = carousel?.height || layout?.heroHeight || 400;
         const config = carousel?.slidesConfig?.[currentSlide] || {};
+        const posX = config.position?.x ?? 50;
+        const posY = config.position?.y ?? 50;
 
         return (
           <section 
-            className="relative overflow-hidden" 
+            className="relative overflow-hidden w-full block" 
             style={{ 
               height: `${bannerHeight}px`,
               ['--banner-height' as any]: `${bannerHeight}px`
@@ -309,7 +296,7 @@ const HomePage: React.FC = () => {
             
             {!carousel?.hideOverlay && <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />}
 
-            <div className={`absolute inset-0 p-8 md:p-16 flex flex-col z-10 ${getAlignmentClasses(config.alignment)}`}>
+            <div className="absolute inset-0 z-10 pointer-events-none">
                <AnimatePresence mode="wait">
                   <motion.div
                     key={currentSlide}
@@ -318,10 +305,16 @@ const HomePage: React.FC = () => {
                     animate="animate"
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="max-w-4xl"
+                    className="absolute w-full px-4 md:px-16"
+                    style={{
+                      left: `${posX}%`,
+                      top: `${posY}%`,
+                      transform: 'translate(-50%, -50%)',
+                      textAlign: posX < 33 ? 'left' : posX > 66 ? 'right' : 'center',
+                    }}
                   >
                     {(!carousel?.urls || carousel.urls.length === 0) && (
-                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-6">
+                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-4">
                          <Zap size={14} className="text-yellow-400 fill-yellow-400" /> {t('প্রিমিয়াম শপিং অভিজ্ঞতা', 'Premium Shopping Experience')}
                       </div>
                     )}
@@ -335,48 +328,25 @@ const HomePage: React.FC = () => {
                     >
                       {config.title || settings.customization?.text?.heroTitle || settings.heroText}
                     </h2>
-                    <p 
-                      className="font-medium mt-4 leading-relaxed max-w-2xl"
-                      style={{ 
-                        fontSize: 'calc(var(--banner-height) * 0.04)',
-                        color: config.subtitleColor || '#e5e7eb',
-                        textShadow: carousel?.hideOverlay ? '1px 1px 3px rgba(0,0,0,0.5)' : 'none'
-                      }}
-                    >
-                      {config.subtitle || settings.heroSubtext}
-                    </p>
-                    
-                    <div className="flex flex-col sm:flex-row gap-4 pt-8">
-                        {vis?.shopCollectionBtn !== false && (
-                          <motion.button 
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="py-4 px-10 font-black uppercase tracking-widest rounded-full shadow-lg transition-all text-sm md:text-base"
-                            style={{ 
-                              backgroundColor: settings.customization?.colors?.primary || settings.primaryColor,
-                              color: 'white'
-                            }}
-                          >
-                            {settings.customization?.text?.shopCollectionBtn || t('কালেকশন দেখুন', 'Shop Collection')}
-                          </motion.button>
-                        )}
-                        {vis?.learnMoreBtn !== false && (
-                          <motion.button 
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="py-4 px-10 font-black uppercase tracking-widest rounded-full bg-white/10 backdrop-blur-md border border-gray-100/20 text-white text-sm md:text-base hover:bg-white/20 transition-all shadow-lg"
-                          >
-                            {settings.customization?.text?.learnMoreBtn || t('আরও জানুন', 'Learn More')}
-                          </motion.button>
-                        )}
-                    </div>
+                    {config.subtitle || settings.heroSubtext ? (
+                        <p 
+                          className="font-medium mt-2 leading-relaxed"
+                          style={{ 
+                            fontSize: 'calc(var(--banner-height) * 0.04)',
+                            color: config.subtitleColor || '#e5e7eb',
+                            textShadow: carousel?.hideOverlay ? '1px 1px 3px rgba(0,0,0,0.5)' : 'none'
+                          }}
+                        >
+                          {config.subtitle || settings.heroSubtext}
+                        </p>
+                    ) : null}
                   </motion.div>
                </AnimatePresence>
             </div>
 
             {/* Carousel Pagination */}
             {carousel?.urls && carousel.urls.length > 1 && (
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+              <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
                  {carousel.urls.map((_, idx) => (
                    <button 
                     key={idx}
@@ -428,7 +398,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Main Content */}
-      <div className="w-full px-4 py-8 md:py-12" style={{ paddingLeft: `${settings.customization?.layout?.containerPadding || 16}px`, paddingRight: `${settings.customization?.layout?.containerPadding || 16}px` }}>
+      <div className="w-full px-4 pb-8 md:pb-12 pt-0 md:pt-0" style={{ paddingLeft: `${settings.customization?.layout?.containerPadding || 16}px`, paddingRight: `${settings.customization?.layout?.containerPadding || 16}px` }}>
         
         {/* Categories Bar */}
         {vis?.categoryTabs !== false && (
