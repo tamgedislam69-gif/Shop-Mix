@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, ShoppingCart, MessageCircle, Phone, Smartphone, MapPin, Map, Navigation2, CreditCard } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatPrice, cn } from '../lib/utils';
-import { db } from '../lib/firebase';
+import { db, rtdb } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref as rtdbRef, push } from 'firebase/database';
 import { ALL_DISTRICTS } from '../lib/geo';
 
 const CheckoutModal: React.FC = () => {
@@ -53,8 +54,8 @@ const CheckoutModal: React.FC = () => {
     const product = selectedProductForCheckout;
 
     // Use product.colors and product.sizes arrays if they exist
-    const availableColors = product.colors || (product.variants?.colors?.[0]?.name.split(',').map(s=>s.trim()).filter(Boolean)) || [];
-    const availableSizes = product.sizes || (product.variants?.sizes?.[0]?.name.split(',').map(s=>s.trim()).filter(Boolean)) || [];
+    const availableColors = (product.colors && product.colors.length > 0) ? product.colors : (product.variants?.colors?.[0]?.name.split(',').map(s=>s.trim()).filter(Boolean)) || [];
+    const availableSizes = (product.sizes && product.sizes.length > 0) ? product.sizes : (product.variants?.sizes?.[0]?.name.split(',').map(s=>s.trim()).filter(Boolean)) || [];
 
     let deliveryCharge = 0;
     if (selectedDistrict) {
@@ -108,12 +109,13 @@ const CheckoutModal: React.FC = () => {
         if (!validate()) return;
         setIsSubmitting(true);
 
-        const orderId = `ORD-${Date.now()}`;
+        try {
+            const orderId = `ORD-${Date.now()}`;
 
-        const colorStr = selectedColors.length > 0 ? `🎨 *Colors:* ${selectedColors.join(', ')}` : '';
-        const sizeStr = selectedSizes.length > 0 ? `📐 *Sizes:* ${selectedSizes.join(', ')}` : '';
+            const colorStr = selectedColors.length > 0 ? `🎨 *Colors:* ${selectedColors.join(', ')}` : '';
+            const sizeStr = selectedSizes.length > 0 ? `📐 *Sizes:* ${selectedSizes.join(', ')}` : '';
 
-        const message = `🚀 *Order Details - ${orderId}*
+            const message = `🚀 *Order Details - ${orderId}*
 -------------------------
 📦 *Item:* ${product.name}
 🔢 *Quantity:* ${quantity}
@@ -130,38 +132,37 @@ ${address ? `🏢 *Address:* ${address}\n` : ''}-------------------------
 🚚 *Delivery:* ${deliveryCharge} BDT
 💳 *GRAND TOTAL:* ${grandTotal} BDT`;
 
-        const encodedMessage = encodeURIComponent(message);
-        setEncodedMsg(encodedMessage);
+            const encodedMessage = encodeURIComponent(message);
+            setEncodedMsg(encodedMessage);
 
-        const newOrder = {
-            id: orderId,
-            items: [{
-                id: product.id,
-                name: product.name,
-                quantity: quantity,
-                selectedColors: selectedColors,
-                selectedSizes: selectedSizes,
-                price: product.price,
-                image: product.image
-            }],
-            total: grandTotal,
-            customer: {
-                name,
-                phone,
-                district: selectedDistrict,
-                thana: selectedThana,
-                address,
-                location: selectedDistrict.toLowerCase() === 'dhaka' ? 'inside' : 'outside'
-            },
-            paymentMethod: 'cod',
-            status: 'pending',
-            createdAt: new Date().toISOString()
-        };
+            const newOrder = {
+                id: orderId,
+                items: [{
+                    id: product.id,
+                    name: product.name,
+                    quantity: quantity,
+                    selectedColors: selectedColors,
+                    selectedSizes: selectedSizes,
+                    price: product.price,
+                    image: product.image
+                }],
+                total: grandTotal,
+                customer: {
+                    name,
+                    phone,
+                    district: selectedDistrict,
+                    thana: selectedThana,
+                    address,
+                    location: selectedDistrict.toLowerCase() === 'dhaka' ? 'inside' : 'outside'
+                },
+                paymentMethod: 'cod',
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
 
-        try {
-            await addDoc(collection(db, 'orders'), {
+            await push(rtdbRef(rtdb, 'orders'), {
                 ...newOrder,
-                serverTimestamp: serverTimestamp()
+                timestamp: new Date().toISOString()
             });
             
             addOrder(newOrder);
@@ -179,7 +180,7 @@ ${address ? `🏢 *Address:* ${address}\n` : ''}-------------------------
             setSelectedSizes([]);
 
         } catch (error) {
-            console.error("Order submission failed:", error);
+            console.error("Firebase Write Error:", error);
             alert("Something went wrong. Please try again.");
         } finally {
             setIsSubmitting(false);

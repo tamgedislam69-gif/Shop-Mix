@@ -80,9 +80,10 @@ const COLOR_PRESETS = [
   { name: 'Gray', hex: '#808080', emoji: '🩶' },
 ];
 
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, doc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { storage, db } from '../lib/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, doc, setDoc, addDoc, serverTimestamp, getDoc, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
+import { ref as rtdbRef, push, set as rtdbSet } from 'firebase/database';
+import { storage, db, rtdb } from '../lib/firebase';
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
@@ -119,8 +120,8 @@ const AdminPage: React.FC = () => {
            throw new Error(data.error?.message || 'Upload failed');
         }
       } else {
-        const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
+        const fileRef = storageRef(storage, `products/${Date.now()}-${file.name}`);
+        const snapshot = await uploadBytes(fileRef, file);
         const url = await getDownloadURL(snapshot.ref);
         setEditingProduct({ ...editingProduct, videoUrl: url });
       }
@@ -225,15 +226,30 @@ const AdminPage: React.FC = () => {
     try {
       let finalProduct: Product;
       
+      // Ensure colors and sizes are clean string arrays
+      const cleanColors = Array.isArray(editingProduct.colors) 
+          ? editingProduct.colors.map(c => String(c).trim()).filter(Boolean)
+          : [];
+          
+      const cleanSizes = Array.isArray(editingProduct.sizes)
+          ? editingProduct.sizes.map(s => String(s).trim()).filter(Boolean)
+          : [];
+
       if (editingProduct.id) {
-        finalProduct = editingProduct as Product;
-        await setDoc(doc(db, 'products', editingProduct.id), finalProduct);
+        finalProduct = {
+            ...editingProduct,
+            colors: cleanColors,
+            sizes: cleanSizes
+        } as Product;
+        await rtdbSet(rtdbRef(rtdb, 'products/' + editingProduct.id), finalProduct);
         setProducts(prev => prev.map(p => p.id === editingProduct.id ? finalProduct : p));
       } else {
-        const docRef = doc(collection(db, 'products'));
+        const newProductRef = push(rtdbRef(rtdb, 'products'));
         finalProduct = { 
           ...editingProduct, 
-          id: docRef.id,
+          id: newProductRef.key as string,
+          colors: cleanColors,
+          sizes: cleanSizes,
           reviews: editingProduct.reviews || [],
           views: editingProduct.views || 0,
           rating: editingProduct.rating || 4.5,
@@ -241,7 +257,7 @@ const AdminPage: React.FC = () => {
           category: editingProduct.category || 'Electronics',
           source: editingProduct.source || 'own'
         } as Product;
-        await setDoc(docRef, finalProduct);
+        await rtdbSet(newProductRef, finalProduct);
         setProducts(prev => [...prev, finalProduct]);
       }
       
@@ -277,7 +293,7 @@ const AdminPage: React.FC = () => {
         }
       }, 2000);
     } catch (error) {
-      console.error("Failed to save product:", error);
+      console.error("Firebase Write Error:", error);
       alert("Failed to save product. Please try again.");
     } finally {
       setIsSavingProduct(false);
