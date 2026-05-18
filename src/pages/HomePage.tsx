@@ -78,7 +78,7 @@ const FlashSaleTimer: React.FC = () => {
   
   if (status === 'ended') {
     return (
-      <div className="flex items-center gap-2 mb-6 text-gray-400">
+      <div className="flex items-center gap-2 text-gray-400">
         <Zap size={20} />
         <h3 className="text-xl font-black uppercase tracking-tight">
           {settings.customization?.text?.flashSaleEnded || settings.flashSale.endMessage || t('ফ্ল্যাশ সেল শেষ হয়েছে', 'Flash Sale Ended')}
@@ -90,7 +90,7 @@ const FlashSaleTimer: React.FC = () => {
   const isUrgent = status === 'active' && timeLeft && parseInt(timeLeft.h) === 0;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
        <div className={cn("flex items-center gap-2 transition-colors duration-300", isUrgent ? "text-red-600" : "text-gray-800")}>
           <motion.div
             animate={isUrgent ? { scale: [1, 1.4, 1] } : { scale: [1, 1.2, 1] }}
@@ -238,7 +238,7 @@ const HomePage: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pb-16"
+      className="flex flex-col w-full min-h-screen pb-16"
     >
       <Helmet>
         <title>{settings.customization?.text?.websiteName || settings.logoText} | {t('বাংলাদেশের সেরা ই-কমার্স প্ল্যাটফর্ম', "Bangladesh's Most Elegant Shopping Destination")}</title>
@@ -364,8 +364,9 @@ const HomePage: React.FC = () => {
       })()}
 
       {/* Features Bar */}
-      <section className="bg-white border-b border-gray-100 py-4 hidden md:block">
+      <section className="bg-white border-b border-gray-100 hidden md:block">
         <div className="container mx-auto px-4 grid grid-cols-4 gap-4">
+
           <div className="flex items-center gap-3 justify-center border-r border-gray-100">
             <ShieldCheck className="text-primary" style={{ color: settings.customization?.colors?.primary || settings.primaryColor }} />
             <div>
@@ -398,11 +399,11 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Main Content */}
-      <div className="w-full px-4 pb-8 md:pb-12 pt-0 md:pt-0" style={{ paddingLeft: `${settings.customization?.layout?.containerPadding || 16}px`, paddingRight: `${settings.customization?.layout?.containerPadding || 16}px` }}>
+      <div className="flex-grow w-full px-4 flex flex-col" style={{ paddingLeft: `${settings.customization?.layout?.containerPadding || 16}px`, paddingRight: `${settings.customization?.layout?.containerPadding || 16}px` }}>
         
         {/* Categories Bar */}
         {vis?.categoryTabs !== false && (
-          <div className="container mx-auto flex items-baseline justify-between mb-8 overflow-x-auto pb-4 scrollbar-hide">
+          <div className="container mx-auto flex items-baseline justify-between overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 md:gap-4 flex-nowrap">
               {['All', ...CATEGORIES].map(cat => (
                 <button

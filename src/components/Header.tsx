@@ -70,7 +70,7 @@ const Header: React.FC = () => {
 
   return (
     <header 
-      className="fixed top-0 left-0 right-0 z-50 shadow-sm border-b"
+      className="relative z-50 shadow-sm border-b"
       style={{ 
         backgroundColor: settings.customization?.colors?.headerBg || 'white',
         borderColor: settings.customization?.colors?.cardBorder || '#f1f1f1',

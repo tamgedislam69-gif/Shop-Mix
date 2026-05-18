@@ -42,7 +42,7 @@ function AppRoutes() {
       <Suspense fallback={<div className="h-20 bg-white shadow-sm border-b border-gray-100" />}>
         <Header />
       </Suspense>
-      <main className="flex-grow pt-[104px] md:pt-[136px]">
+      <main className="flex-grow flex flex-col">
         <Suspense fallback={<SuspenseFallback />}>
           <AnimatePresence mode="wait">
             <Routes>
