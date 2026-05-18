@@ -54,8 +54,8 @@ const CheckoutModal: React.FC = () => {
     const product = selectedProductForCheckout;
 
     // Use product.colors and product.sizes arrays if they exist
-    const availableColors = (product.colors && product.colors.length > 0) ? product.colors : (product.variants?.colors?.[0]?.name.split(',').map(s=>s.trim()).filter(Boolean)) || [];
-    const availableSizes = (product.sizes && product.sizes.length > 0) ? product.sizes : (product.variants?.sizes?.[0]?.name.split(',').map(s=>s.trim()).filter(Boolean)) || [];
+    const availableColors = (product.colors && product.colors.length > 0) ? product.colors : (product.variants?.colors?.[0]?.name?.split(',').map(s=>s.trim()).filter(Boolean)) || [];
+    const availableSizes = (product.sizes && product.sizes.length > 0) ? product.sizes : (product.variants?.sizes?.[0]?.name?.split(',').map(s=>s.trim()).filter(Boolean)) || [];
 
     let deliveryCharge = 0;
     if (selectedDistrict) {
@@ -102,7 +102,13 @@ const CheckoutModal: React.FC = () => {
         }
         
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        
+        if (Object.keys(newErrors).length > 0) {
+            const errorMessages = Object.entries(newErrors).map(([key, msg]) => `${key.toUpperCase()}: ${msg}`).join('\n');
+            alert(`Please complete the following required fields:\n\n${errorMessages}`);
+            return false;
+        }
+        return true;
     };
 
     const handleConfirmOrder = async () => {
@@ -112,8 +118,11 @@ const CheckoutModal: React.FC = () => {
         try {
             const orderId = `ORD-${Date.now()}`;
 
-            const colorStr = selectedColors.length > 0 ? `🎨 *Colors:* ${selectedColors.join(', ')}` : '';
-            const sizeStr = selectedSizes.length > 0 ? `📐 *Sizes:* ${selectedSizes.join(', ')}` : '';
+            const orderColors = selectedColors || [];
+            const orderSizes = selectedSizes || [];
+
+            const colorStr = orderColors.length > 0 ? `🎨 *Colors:* ${orderColors.join(', ')}` : '';
+            const sizeStr = orderSizes.length > 0 ? `📐 *Sizes:* ${orderSizes.join(', ')}` : '';
 
             const message = `🚀 *Order Details - ${orderId}*
 -------------------------
@@ -141,8 +150,8 @@ ${address ? `🏢 *Address:* ${address}\n` : ''}-------------------------
                     id: product.id,
                     name: product.name,
                     quantity: quantity,
-                    selectedColors: selectedColors,
-                    selectedSizes: selectedSizes,
+                    selectedColors: orderColors,
+                    selectedSizes: orderSizes,
                     price: product.price,
                     image: product.image
                 }],
@@ -318,7 +327,7 @@ ${address ? `🏢 *Address:* ${address}\n` : ''}-------------------------
                                             <h3 className="font-black tracking-tight text-lg uppercase">Delivery Info</h3>
                                         </div>
                                         
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="flex flex-col gap-4">
                                             <div>
                                                 <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1 flex justify-between">
                                                     Full Name {errors.name && <span className="text-red-500">Required</span>}
