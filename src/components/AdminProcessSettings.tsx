@@ -114,12 +114,25 @@ export const AdminProcessSettings: React.FC = () => {
     const urls = [...(c.carousel?.urls || [])];
     urls.splice(index, 1);
     updateNested('customization.carousel.urls', urls);
+
+    const config = [...(c.carousel?.slidesConfig || [])];
+    if (config.length > index) {
+      config.splice(index, 1);
+      updateNested('customization.carousel.slidesConfig', config);
+    }
   };
 
   const updateCarouselUrl = (index: number, val: string) => {
     const urls = [...(c.carousel?.urls || [])];
     urls[index] = val;
     updateNested('customization.carousel.urls', urls);
+  };
+
+  const updateCarouselConfig = (index: number, key: string, value: any) => {
+    const config = [...(c.carousel?.slidesConfig || [])];
+    if (!config[index]) config[index] = {};
+    config[index] = { ...config[index], [key]: value };
+    updateNested('customization.carousel.slidesConfig', config);
   };
 
   const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -455,9 +468,40 @@ export const AdminProcessSettings: React.FC = () => {
                       />
                     </div>
 
-                    <div className="space-y-4 pt-6 border-t">
+                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-500">
+                        <label>Banner Height (px)</label>
+                        <span>{c.carousel?.height || 400}px</span>
+                      </div>
+                      <input 
+                        type="range"
+                        min="200"
+                        max="650"
+                        step="10"
+                        value={c.carousel?.height || 400}
+                        onChange={(e) => updateNested('customization.carousel.height', parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-black"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                        Hide Shadow/Overlay
+                      </label>
+                      <button 
+                        onClick={() => updateNested('customization.carousel.hideOverlay', !c.carousel?.hideOverlay)}
+                        className={cn(
+                          "w-12 h-6 rounded-full p-1 transition-all",
+                          c.carousel?.hideOverlay ? "bg-black" : "bg-gray-200"
+                        )}
+                      >
+                         <div className={cn("w-4 h-4 bg-white rounded-full transition-all", c.carousel?.hideOverlay ? "translate-x-6" : "")} />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4 pt-6 border-t border-gray-100">
                        <div className="flex items-center justify-between">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Image Slides</label>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Image Slides Config</label>
                           <button 
                             onClick={addCarouselUrl}
                             className="bg-black text-white p-1.5 rounded-lg hover:scale-105 transition-all"
@@ -466,46 +510,129 @@ export const AdminProcessSettings: React.FC = () => {
                           </button>
                        </div>
 
-                       <div className="space-y-3">
-                          {(c.carousel?.urls || []).map((url, idx) => (
-                            <div key={idx} className="flex gap-3 group items-center bg-gray-50 border border-gray-100 rounded-xl p-2 relative overflow-hidden transition-all hover:border-gray-300">
-                              {uploadingIndexes[idx] ? (
-                                <div className="h-14 w-24 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
-                                  <Loader2 className="animate-spin text-gray-500" size={20} />
+                       <div className="space-y-6">
+                          {(c.carousel?.urls || []).map((url, idx) => {
+                            const config = c.carousel?.slidesConfig?.[idx] || {};
+                            return (
+                              <div key={idx} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-4">
+                                {/* Top Image Section */}
+                                <div className="flex gap-3 group items-center bg-gray-50 border border-gray-100 rounded-xl p-2 relative overflow-hidden transition-all hover:border-gray-300">
+                                  {uploadingIndexes[idx] ? (
+                                    <div className="h-14 w-24 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
+                                      <Loader2 className="animate-spin text-gray-500" size={20} />
+                                    </div>
+                                  ) : url ? (
+                                    <div className="h-14 w-24 bg-gray-200 rounded-lg overflow-hidden shrink-0 shadow-inner">
+                                      <img src={url} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" />
+                                    </div>
+                                  ) : (
+                                    <div className="h-14 w-24 bg-gray-200 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
+                                      <ImageIcon size={20} className="text-gray-400" />
+                                    </div>
+                                  )}
+                                  
+                                  <div className="grow relative h-10 flex items-center">
+                                    <input 
+                                      type="file"
+                                      accept="image/*"
+                                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                      onChange={(e) => handleImageUpload(idx, e)}
+                                      disabled={uploadingIndexes[idx]}
+                                    />
+                                    <div className="flex items-center gap-2 text-xs font-bold text-gray-700 bg-white border border-gray-200 px-4 py-2.5 rounded-lg shadow-sm whitespace-nowrap overflow-hidden">
+                                      <Upload size={14} className="shrink-0" /> 
+                                      <span className="truncate">{url ? 'Replace Image' : 'Select Image...'}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <button 
+                                    onClick={() => removeCarouselUrl(idx)}
+                                    className="w-10 h-10 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0 relative z-20"
+                                    disabled={uploadingIndexes[idx]}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
                                 </div>
-                              ) : url ? (
-                                <div className="h-14 w-24 bg-gray-200 rounded-lg overflow-hidden shrink-0 shadow-inner">
-                                  <img src={url} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" />
-                                </div>
-                              ) : (
-                                <div className="h-14 w-24 bg-gray-200 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-                                  <ImageIcon size={20} className="text-gray-400" />
-                                </div>
-                              )}
-                              
-                              <div className="grow relative h-10 flex items-center">
-                                <input 
-                                  type="file"
-                                  accept="image/*"
-                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                  onChange={(e) => handleImageUpload(idx, e)}
-                                  disabled={uploadingIndexes[idx]}
-                                />
-                                <div className="flex items-center gap-2 text-xs font-bold text-gray-700 bg-white border border-gray-200 px-4 py-2.5 rounded-lg shadow-sm whitespace-nowrap overflow-hidden">
-                                  <Upload size={14} className="shrink-0" /> 
-                                  <span className="truncate">{url ? 'Replace Image' : 'Select Image...'}</span>
+
+                                {/* Text & Configuration */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Slide Title</label>
+                                     <input 
+                                       className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-xs font-bold"
+                                       value={config.title || ''}
+                                       placeholder="e.g. Summer Collection"
+                                       onChange={e => updateCarouselConfig(idx, 'title', e.target.value)}
+                                     />
+                                  </div>
+                                  <div className="space-y-2">
+                                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Title Color</label>
+                                     <div className="flex gap-2">
+                                        <input 
+                                          className="grow bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-xs font-mono"
+                                          value={config.titleColor || '#ffffff'}
+                                          onChange={e => updateCarouselConfig(idx, 'titleColor', e.target.value)}
+                                        />
+                                        <div className="w-9 h-9 rounded-md border border-gray-200" style={{ backgroundColor: config.titleColor || '#ffffff' }} />
+                                     </div>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Slide Subtitle</label>
+                                     <input 
+                                       className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-xs font-bold"
+                                       value={config.subtitle || ''}
+                                       placeholder="Up to 50% off"
+                                       onChange={e => updateCarouselConfig(idx, 'subtitle', e.target.value)}
+                                     />
+                                  </div>
+                                  <div className="space-y-2">
+                                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Subtitle Color</label>
+                                      <div className="flex gap-2">
+                                        <input 
+                                          className="grow bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-xs font-mono"
+                                          value={config.subtitleColor || '#e5e7eb'}
+                                          onChange={e => updateCarouselConfig(idx, 'subtitleColor', e.target.value)}
+                                        />
+                                        <div className="w-9 h-9 rounded-md border border-gray-200" style={{ backgroundColor: config.subtitleColor || '#e5e7eb' }} />
+                                     </div>
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Alignment</label>
+                                     <select 
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-xs font-bold appearance-none"
+                                        value={config.alignment || 'cc'}
+                                        onChange={e => updateCarouselConfig(idx, 'alignment', e.target.value)}
+                                     >
+                                        <option value="tl">Top-Left</option>
+                                        <option value="tc">Top-Center</option>
+                                        <option value="tr">Top-Right</option>
+                                        <option value="cl">Center-Left</option>
+                                        <option value="cc">Center</option>
+                                        <option value="cr">Center-Right</option>
+                                        <option value="bl">Bottom-Left</option>
+                                        <option value="bc">Bottom-Center</option>
+                                        <option value="br">Bottom-Right</option>
+                                     </select>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Animation</label>
+                                     <select 
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-xs font-bold appearance-none"
+                                        value={config.animation || 'fade'}
+                                        onChange={e => updateCarouselConfig(idx, 'animation', e.target.value)}
+                                     >
+                                        <option value="fade">Fade In</option>
+                                        <option value="slideUp">Slide Up</option>
+                                        <option value="zoomIn">Zoom In</option>
+                                     </select>
+                                  </div>
                                 </div>
                               </div>
-                              
-                              <button 
-                                onClick={() => removeCarouselUrl(idx)}
-                                className="w-10 h-10 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0 relative z-20"
-                                disabled={uploadingIndexes[idx]}
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
                        </div>
                     </div>
                   </div>

@@ -188,8 +188,18 @@ export interface CustomizationSettings {
   };
   carousel?: {
     urls: string[];
+    slidesConfig?: {
+      title?: string;
+      subtitle?: string;
+      titleColor?: string;
+      subtitleColor?: string;
+      alignment?: 'tl' | 'tc' | 'tr' | 'cl' | 'cc' | 'cr' | 'bl' | 'bc' | 'br';
+      animation?: 'fade' | 'slideUp' | 'zoomIn';
+    }[];
     duration: number;
     isEnabled: boolean;
+    height?: number;
+    hideOverlay?: boolean;
   };
   darkMode?: boolean;
   text: {

@@ -141,6 +141,27 @@ const FlashSaleTimer: React.FC = () => {
   );
 };
 
+const getAlignmentClasses = (alignment = 'cc') => {
+  const map: Record<string, string> = {
+    'tl': 'justify-start items-start text-left',
+    'tc': 'justify-start items-center text-center',
+    'tr': 'justify-start items-end text-right',
+    'cl': 'justify-center items-start text-left',
+    'cc': 'justify-center items-center text-center',
+    'cr': 'justify-center items-end text-right',
+    'bl': 'justify-end items-start text-left',
+    'bc': 'justify-end items-center text-center',
+    'br': 'justify-end items-end text-right',
+  };
+  return map[alignment] || map['cc'];
+};
+
+const getAnimationVariants = (animType = 'fade') => {
+  if (animType === 'slideUp') return { initial: { y: 50, opacity: 0 }, animate: { y: 0, opacity: 1 } };
+  if (animType === 'zoomIn') return { initial: { scale: 0.5, opacity: 0 }, animate: { scale: 1, opacity: 1 } };
+  return { initial: { opacity: 0 }, animate: { opacity: 1 } };
+};
+
 const HomePage: React.FC = () => {
   const { products, settings, searchQuery } = useApp();
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -241,109 +262,136 @@ const HomePage: React.FC = () => {
       </Helmet>
 
       {/* Hero Section */}
-      {vis?.heroBanner !== false && (
-        <section 
-          className="relative overflow-hidden" 
-          style={{ 
-            height: `${layout?.heroHeight || 600}px`,
-            padding: `${layout?.heroPadding || 40}px 0`
-          }}
-        >
-          {/* Carousel Background */}
-          <div className="absolute inset-0">
-             <AnimatePresence mode="wait">
-               <motion.div 
-                key={currentSlide}
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 0.6, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 1.5, ease: 'easeOut' }}
-                className="absolute inset-0"
-               >
-                  {carousel?.urls && carousel.urls.length > 0 ? (
-                    <img loading="lazy" 
-                      src={carousel.urls[currentSlide] || undefined} 
-                      className="w-full h-full object-cover"
-                      alt="Banner"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <video 
-                      autoPlay 
-                      muted 
-                      loop 
-                      playsInline
-                      className="w-full h-full object-cover opacity-60 scale-105"
-                    >
-                      <source src={settings.heroVideoUrl || undefined} type="video/mp4" />
-                    </video>
-                  )}
-               </motion.div>
-             </AnimatePresence>
-          </div>
-          
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+      {vis?.heroBanner !== false && (() => {
+        const bannerHeight = carousel?.height || layout?.heroHeight || 600;
+        const config = carousel?.slidesConfig?.[currentSlide] || {};
 
-          <div className="container mx-auto px-6 h-full relative z-10 flex flex-col justify-center items-center text-center">
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="space-y-6 max-w-4xl"
-              >
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mx-auto">
-                   <Zap size={14} className="text-yellow-400 fill-yellow-400" /> {t('প্রিমিয়াম শপিং অভিজ্ঞতা', 'Premium Shopping Experience')}
-                </div>
-                <h2 className="text-4xl md:text-8xl font-black text-white uppercase leading-[0.9] tracking-tighter mix-blend-difference">
-                  {settings.customization?.text?.heroTitle || settings.heroText}
-                </h2>
-                <p className="text-sm md:text-xl text-gray-300 font-medium max-w-2xl mx-auto leading-relaxed">
-                  {settings.heroSubtext}
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                    {vis?.shopCollectionBtn !== false && (
-                      <motion.button 
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="py-4 px-10 font-black uppercase tracking-widest rounded-full shadow-2xl transition-all text-sm md:text-base"
-                        style={{ 
-                          backgroundColor: settings.customization?.colors?.primary || settings.primaryColor,
-                          color: 'white'
-                        }}
+        return (
+          <section 
+            className="relative overflow-hidden" 
+            style={{ 
+              height: `${bannerHeight}px`,
+              ['--banner-height' as any]: `${bannerHeight}px`
+            }}
+          >
+            {/* Carousel Background */}
+            <div className="absolute inset-0">
+               <AnimatePresence mode="wait">
+                 <motion.div 
+                  key={currentSlide}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: carousel?.hideOverlay ? 1 : 0.6, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 1.5, ease: 'easeOut' }}
+                  className="absolute inset-0"
+                 >
+                    {carousel?.urls && carousel.urls.length > 0 ? (
+                      <img loading="lazy" 
+                        src={carousel.urls[currentSlide] || undefined} 
+                        className="w-full h-full object-cover"
+                        alt="Banner"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <video 
+                        autoPlay 
+                        muted 
+                        loop 
+                        playsInline
+                        className="w-full h-full object-cover opacity-60 scale-105"
                       >
-                        {settings.customization?.text?.shopCollectionBtn || t('কালেকশন দেখুন', 'Shop Collection')}
-                      </motion.button>
+                        <source src={settings.heroVideoUrl || undefined} type="video/mp4" />
+                      </video>
                     )}
-                    {vis?.learnMoreBtn !== false && (
-                      <motion.button 
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="py-4 px-10 font-black uppercase tracking-widest rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm md:text-base hover:bg-white/20 transition-all"
-                      >
-                        {settings.customization?.text?.learnMoreBtn || t('আরও জানুন', 'Learn More')}
-                      </motion.button>
-                    )}
-                </div>
-              </motion.div>
-          </div>
-
-          {/* Carousel Pagination */}
-          {carousel?.urls && carousel.urls.length > 1 && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-               {carousel.urls.map((_, idx) => (
-                 <button 
-                  key={idx}
-                  onClick={() => setCurrentSlide(idx)}
-                  className={cn(
-                    "w-8 h-1 rounded-full transition-all duration-500",
-                    currentSlide === idx ? "bg-white w-12" : "bg-white/30"
-                  )}
-                 />
-               ))}
+                 </motion.div>
+               </AnimatePresence>
             </div>
-          )}
-        </section>
-      )}
+            
+            {!carousel?.hideOverlay && <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />}
+
+            <div className={`absolute inset-0 p-8 md:p-16 flex flex-col z-10 ${getAlignmentClasses(config.alignment)}`}>
+               <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentSlide}
+                    variants={getAnimationVariants(config.animation)}
+                    initial="initial"
+                    animate="animate"
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="max-w-4xl"
+                  >
+                    {(!carousel?.urls || carousel.urls.length === 0) && (
+                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-6">
+                         <Zap size={14} className="text-yellow-400 fill-yellow-400" /> {t('প্রিমিয়াম শপিং অভিজ্ঞতা', 'Premium Shopping Experience')}
+                      </div>
+                    )}
+                    <h2 
+                      className="font-black uppercase leading-[0.9] tracking-tighter"
+                      style={{ 
+                        fontSize: 'calc(var(--banner-height) * 0.12)',
+                        color: config.titleColor || '#ffffff',
+                        textShadow: carousel?.hideOverlay ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none'
+                      }}
+                    >
+                      {config.title || settings.customization?.text?.heroTitle || settings.heroText}
+                    </h2>
+                    <p 
+                      className="font-medium mt-4 leading-relaxed max-w-2xl"
+                      style={{ 
+                        fontSize: 'calc(var(--banner-height) * 0.04)',
+                        color: config.subtitleColor || '#e5e7eb',
+                        textShadow: carousel?.hideOverlay ? '1px 1px 3px rgba(0,0,0,0.5)' : 'none'
+                      }}
+                    >
+                      {config.subtitle || settings.heroSubtext}
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4 pt-8">
+                        {vis?.shopCollectionBtn !== false && (
+                          <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="py-4 px-10 font-black uppercase tracking-widest rounded-full shadow-lg transition-all text-sm md:text-base"
+                            style={{ 
+                              backgroundColor: settings.customization?.colors?.primary || settings.primaryColor,
+                              color: 'white'
+                            }}
+                          >
+                            {settings.customization?.text?.shopCollectionBtn || t('কালেকশন দেখুন', 'Shop Collection')}
+                          </motion.button>
+                        )}
+                        {vis?.learnMoreBtn !== false && (
+                          <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="py-4 px-10 font-black uppercase tracking-widest rounded-full bg-white/10 backdrop-blur-md border border-gray-100/20 text-white text-sm md:text-base hover:bg-white/20 transition-all shadow-lg"
+                          >
+                            {settings.customization?.text?.learnMoreBtn || t('আরও জানুন', 'Learn More')}
+                          </motion.button>
+                        )}
+                    </div>
+                  </motion.div>
+               </AnimatePresence>
+            </div>
+
+            {/* Carousel Pagination */}
+            {carousel?.urls && carousel.urls.length > 1 && (
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                 {carousel.urls.map((_, idx) => (
+                   <button 
+                    key={idx}
+                    onClick={() => setCurrentSlide(idx)}
+                    className={cn(
+                      "w-8 h-1 rounded-full transition-all duration-500",
+                      currentSlide === idx ? "bg-white w-12" : "bg-white/30"
+                    )}
+                   />
+                 ))}
+              </div>
+            )}
+          </section>
+        );
+      })()}
 
       {/* Features Bar */}
       <section className="bg-white border-b border-gray-100 py-4 hidden md:block">
