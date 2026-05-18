@@ -151,14 +151,54 @@ const HomePage: React.FC = () => {
   const carousel = settings.customization?.carousel;
 
   const filteredProducts = React.useMemo(() => {
-    return products.filter(p => {
-      const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesCategory && matchesSearch;
-    });
+    let result = products.filter(p => selectedCategory === 'All' || p.category === selectedCategory);
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      
+      const scored = result.map(p => {
+        let score = 0;
+        const name = p.name.toLowerCase();
+        const category = p.category.toLowerCase();
+        const desc = p.description.toLowerCase();
+        const sku = (p.sku || '').toLowerCase();
+        
+        if (name.startsWith(query)) score += 1000;
+        if (category.startsWith(query)) score += 800;
+        
+        const words = name.split(/\s+/);
+        if (words.some(w => w.startsWith(query))) score += 700;
+        
+        if (name.includes(query)) score += 500;
+        if (category.includes(query)) score += 400;
+        if (sku.includes(query)) score += 300;
+        if (desc.includes(query)) score += 100;
+
+        // Mild fuzzy search sequence matching for typo tolerance
+        const isSubsequence = (search: string, text: string) => {
+          let i = 0;
+          for (let j = 0; j < text.length && i < search.length; j++) {
+            if (search[i] === text[j]) i++;
+          }
+          return i === search.length;
+        };
+
+        if (score === 0) {
+          if (isSubsequence(query, name)) score += 50;
+          else if (isSubsequence(query, category)) score += 40;
+          else if (isSubsequence(query, desc)) score += 10;
+        }
+
+        return { item: p, score };
+      });
+
+      result = scored
+        .filter(s => s.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(s => s.item);
+    }
+
+    return result;
   }, [products, selectedCategory, searchQuery]);
 
   // Carousel Logic

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Twitter, Phone, Mail, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Phone, Mail, MapPin, MessageCircle, MessageSquare } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useTranslate } from '../hooks/useTranslate';
 import { db } from '../lib/firebase';
@@ -35,9 +35,21 @@ const Footer: React.FC = () => {
           </p>
           {vis?.socialLinks !== false && (
             <div className="flex gap-4">
-              <a href="#" className="hover:text-primary transition-colors"><Facebook size={20} /></a>
-              <a href="#" className="hover:text-primary transition-colors"><Instagram size={20} /></a>
-              <a href="#" className="hover:text-primary transition-colors"><Twitter size={20} /></a>
+              {settings.companyInfo?.facebookProfile && (
+                <a href={settings.companyInfo.facebookProfile} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:scale-110 transform"><Facebook size={20} /></a>
+              )}
+              {settings.companyInfo?.facebookPage && (
+                <a href={settings.companyInfo.facebookPage} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:scale-110 transform"><Facebook size={20} /></a>
+              )}
+              {settings.companyInfo?.instagram && (
+                <a href={settings.companyInfo.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:scale-110 transform"><Instagram size={20} /></a>
+              )}
+              {settings.companyInfo?.whatsapp && (
+                <a href={settings.companyInfo.whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:scale-110 transform"><MessageCircle size={20} /></a>
+              )}
+              {settings.companyInfo?.imo && (
+                <a href={settings.companyInfo.imo} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:scale-110 transform"><MessageSquare size={20} /></a>
+              )}
             </div>
           )}
         </div>
@@ -107,9 +119,12 @@ const Footer: React.FC = () => {
                     }
                     
                     // 2. WhatsApp Redirection
-                    const whatsappNumber = "8801771357329";
+                    const dynamicPhone = settings.companyInfo?.phone || "01771357329";
+                    const whatsappNumber = dynamicPhone.replace(/\D/g, ''); // Strip non-digits
+                    // Make sure it has country code if omitted
+                    const finalNumber = whatsappNumber.startsWith('880') ? whatsappNumber : `88${whatsappNumber}`;
                     
-                    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+                    window.open(`https://wa.me/${finalNumber}?text=${encodedMessage}`, '_blank');
                     (e.target as HTMLFormElement).reset();
                   }}
                   className="space-y-6"
@@ -164,17 +179,17 @@ const Footer: React.FC = () => {
 
         <div className="space-y-6">
           <h3 className="text-lg font-black uppercase mb-6 tracking-widest" style={{ color: col?.footerTitle || 'white' }}>{t('যোগাযোগ', 'Contact Info')}</h3>
-          <div className="flex items-start gap-3 text-sm">
+          <div className="flex items-start gap-3 text-sm flex-wrap">
             <MapPin size={18} className="mt-1 flex-shrink-0" style={{ color: col?.primary || settings.primaryColor }} />
-            <span>Dhaka, Bangladesh</span>
+            <span>{settings.companyInfo?.address || '380/1, Road, East Rampura, Dhaka -1219'}</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Phone size={18} className="flex-shrink-0" style={{ color: col?.primary || settings.primaryColor }} />
-            <span>+8801771357329</span>
+            <span>{settings.companyInfo?.phone || '+8801771357329'}</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Mail size={18} className="flex-shrink-0" style={{ color: col?.primary || settings.primaryColor }} />
-            <span>tamgedislam69@gmail.com</span>
+            <span>{settings.companyInfo?.email || 'tamgedislam69@gmail.com'}</span>
           </div>
         </div>
       </div>

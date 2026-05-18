@@ -11,7 +11,9 @@ const WhatsAppButton: React.FC = () => {
   
   if (settings.customization?.visibility?.whatsappFloat === false) return null;
 
-  const phoneNumber = settings.whatsappNumber || '8801900000000';
+  const dynamicPhone = settings.companyInfo?.phone || "01771357329";
+  const formattedPhone = dynamicPhone.replace(/\D/g, ''); // Strip non-digits
+  const phoneNumber = formattedPhone.startsWith('880') ? formattedPhone : `88${formattedPhone}`;
   
   // Get current product if on product page
   const productId = location.pathname.split('/product/')[1];

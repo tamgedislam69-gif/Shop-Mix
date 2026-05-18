@@ -57,6 +57,7 @@ import { useNavigate } from 'react-router-dom';
 import PostManager from '../components/PostManager';
 import MediaManager from '../components/MediaManager';
 import ComplaintsManager from '../components/ComplaintsManager';
+import SiteSettingsTab from '../components/SiteSettingsTab';
 
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -91,7 +92,7 @@ const AdminPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { products, setProducts, settings, updateSettings, orders, setOrders, analytics, logout } = useApp();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'settings' | 'orders' | 'media' | 'posts' | 'customization' | 'complaints'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'settings' | 'site_settings' | 'orders' | 'media' | 'posts' | 'customization' | 'complaints'>('dashboard');
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'image' | 'video') => {
     const file = e.target.files?.[0];
@@ -355,6 +356,16 @@ const AdminPage: React.FC = () => {
                   style={activeTab === 'customization' ? { backgroundColor: settings.primaryColor } : {}}
                 >
                     <Palette size={18} /> Customization
+                </button>
+                <button 
+                  onClick={() => setActiveTab('site_settings')}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all text-sm uppercase tracking-wider",
+                    activeTab === 'site_settings' ? "bg-gray-900 text-white shadow-lg" : "text-gray-500 hover:bg-gray-100"
+                  )}
+                  style={activeTab === 'site_settings' ? { backgroundColor: '#1f2937' } : {}}
+                >
+                    <Globe size={18} /> Site Settings
                 </button>
                 <button 
                   onClick={() => setActiveTab('orders')}
@@ -2137,6 +2148,10 @@ const AdminPage: React.FC = () => {
                             </section>
                         </div>
                     </motion.div>
+                )}
+
+                {activeTab === 'site_settings' && (
+                    <SiteSettingsTab />
                 )}
 
                 {activeTab === 'complaints' && (

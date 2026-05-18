@@ -222,6 +222,16 @@ export interface SiteSettings {
   heroSubtext: string;
   buyButton: ButtonConfig;
   addToCartButton: ButtonConfig;
+  companyInfo?: {
+    phone: string;
+    email: string;
+    address: string;
+    facebookProfile: string;
+    facebookPage: string;
+    instagram: string;
+    whatsapp: string;
+    imo: string;
+  };
   flashSale?: {
     isEnabled: boolean;
     startTime: string;

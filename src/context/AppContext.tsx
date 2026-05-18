@@ -124,6 +124,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
+    async function listenSiteSettings() {
+        const { rtdb } = await import('../lib/firebase');
+        const { ref, onValue } = await import('firebase/database');
+        const settingsRef = ref(rtdb, 'settings');
+        return onValue(settingsRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                setSettings(prev => ({ ...prev, companyInfo: data }));
+            }
+        });
+    }
+    let unsubSiteSettings: any;
+    listenSiteSettings().then(u => unsubSiteSettings = u);
+
+    return () => {
+        if (unsubSiteSettings) unsubSiteSettings();
+    };
+  }, []);
+
+  useEffect(() => {
     let unsub: (() => void) | undefined;
     let isMounted = true;
 
