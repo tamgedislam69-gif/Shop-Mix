@@ -73,6 +73,8 @@ export interface CartItem extends Product {
   quantity: number;
   selectedColor?: string;
   selectedSize?: string;
+  selectedColors?: string[];
+  selectedSizes?: string[];
 }
 
 export interface ButtonConfig {

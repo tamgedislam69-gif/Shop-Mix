@@ -255,7 +255,7 @@ const HomePage: React.FC = () => {
 
         return (
           <section 
-            className="relative overflow-hidden w-full block" 
+            className="relative overflow-hidden w-full block transition-[height] duration-300 ease-out" 
             style={{ 
               height: `${bannerHeight}px`,
               ['--banner-height' as any]: `${bannerHeight}px`
