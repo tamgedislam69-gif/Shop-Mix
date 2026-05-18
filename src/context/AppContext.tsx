@@ -124,6 +124,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
+    let unsub: (() => void) | undefined;
+    let isMounted = true;
+
     async function fetchOrders() {
       if (isAdmin) {
         try {
@@ -135,18 +138,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               id: doc.id,
               ...doc.data()
             })) as Order[];
-            setOrders(data);
+            if (isMounted) setOrders(data);
           });
-          return unsubscribe;
+          
+          if (isMounted) {
+            unsub = unsubscribe;
+          } else {
+            // Already unmounted while fetching
+            unsubscribe();
+          }
         } catch (error) {
           console.error("Error fetching orders from Firestore:", error);
         }
       }
     }
-    let unsub: any;
-    fetchOrders().then(u => unsub = u);
+    
+    fetchOrders();
+
     return () => {
-      if (unsub && typeof unsub === 'function') unsub();
+      isMounted = false;
+      if (unsub) unsub();
     };
   }, [isAdmin]);
 

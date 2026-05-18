@@ -206,7 +206,7 @@ const MediaManager: React.FC = () => {
                 <div className="space-y-6">
                     <div className="aspect-video bg-gray-100 rounded-3xl overflow-hidden shadow-inner relative border border-gray-100">
                         {editingMedia.type === 'image' ? (
-                            <img 
+                            <img loading="lazy" 
                                 src={editingMedia.url || undefined} 
                                 className="w-full h-full object-contain" 
                                 style={{ 

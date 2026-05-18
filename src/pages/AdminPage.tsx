@@ -44,7 +44,8 @@ import {
   User,
   Phone,
   MapPin,
-  Type as TypeIcon
+  Type as TypeIcon,
+  CheckCircle2
 } from 'lucide-react';
 import { CATEGORIES, INITIAL_SETTINGS } from '../constants';
 import { Product, SiteSettings, Order } from '../types';
@@ -79,11 +80,14 @@ const COLOR_PRESETS = [
 ];
 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../lib/firebase';
+import { collection, doc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { storage, db } from '../lib/firebase';
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { products, setProducts, settings, updateSettings, orders, setOrders, analytics, logout } = useApp();
@@ -197,26 +201,71 @@ const AdminPage: React.FC = () => {
   const [tempSettings, setTempSettings] = useState<SiteSettings>(settings);
 
   // --- Product Handlers ---
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
 
-    if (editingProduct.id) {
-      setProducts(prev => prev.map(p => p.id === editingProduct.id ? editingProduct as Product : p));
-    } else {
-      const newProduct = { 
-        ...editingProduct, 
-        id: Math.random().toString(36).substr(2, 9),
-        reviews: editingProduct.reviews || [],
-        views: editingProduct.views || 0,
-        rating: editingProduct.rating || 4.5,
-        videoUrl: editingProduct.videoUrl || '',
-        category: editingProduct.category || 'Electronics',
-        source: editingProduct.source || 'own'
-      } as Product;
-      setProducts(prev => [...prev, newProduct]);
+    setIsSavingProduct(true);
+    try {
+      let finalProduct: Product;
+      
+      if (editingProduct.id) {
+        finalProduct = editingProduct as Product;
+        await setDoc(doc(db, 'products', editingProduct.id), finalProduct);
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? finalProduct : p));
+      } else {
+        const docRef = doc(collection(db, 'products'));
+        finalProduct = { 
+          ...editingProduct, 
+          id: docRef.id,
+          reviews: editingProduct.reviews || [],
+          views: editingProduct.views || 0,
+          rating: editingProduct.rating || 4.5,
+          videoUrl: editingProduct.videoUrl || '',
+          category: editingProduct.category || 'Electronics',
+          source: editingProduct.source || 'own'
+        } as Product;
+        await setDoc(docRef, finalProduct);
+        setProducts(prev => [...prev, finalProduct]);
+      }
+      
+      setShowSaveSuccess(true);
+      setTimeout(() => {
+        setShowSaveSuccess(false);
+        if (editingProduct.id) {
+            setEditingProduct(null); // Close modal on edit completion
+        } else {
+            // Auto-reset form for new product
+            setEditingProduct({
+                id: '',
+                name: '',
+                price: 0,
+                originalPrice: 0,
+                description: '',
+                shortDescription: '',
+                image: '',
+                category: CATEGORIES[0],
+                stock: 0,
+                rating: 0,
+                reviews: [],
+                views: 0,
+                source: 'own',
+                isOwnInventory: true,
+                showImage: true,
+                showVideo: false,
+                videoUrl: '',
+                enableColors: false,
+                enableSizes: false,
+                variants: { colors: [], sizes: [] }
+            });
+        }
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to save product:", error);
+      alert("Failed to save product. Please try again.");
+    } finally {
+      setIsSavingProduct(false);
     }
-    setEditingProduct(null);
   };
 
   const deleteProduct = (id: string) => {
@@ -835,7 +884,7 @@ const AdminPage: React.FC = () => {
                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                  {topProducts.map(p => (
                                      <div key={p.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                         <img src={p.image || undefined} className="w-12 h-12 rounded-lg object-cover" />
+                                         <img loading="lazy" src={p.image || undefined} className="w-12 h-12 rounded-lg object-cover" />
                                          <div className="flex-grow">
                                              <p className="text-xs font-bold line-clamp-1">{p.name}</p>
                                              <p className="text-[10px] text-gray-400 font-bold uppercase">{p.views || 0} views</p>
@@ -905,7 +954,7 @@ const AdminPage: React.FC = () => {
                                         <tr key={p.id} className="group hover:bg-gray-50/50 transition-colors">
                                             <td className="px-4 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <img src={p.image || undefined} className="w-10 h-10 rounded object-cover bg-gray-100" referrerPolicy="no-referrer" />
+                                                    <img loading="lazy" src={p.image || undefined} className="w-10 h-10 rounded object-cover bg-gray-100" referrerPolicy="no-referrer" />
                                                     <span className="font-bold text-sm text-gray-800 line-clamp-1">{p.name}</span>
                                                 </div>
                                             </td>
@@ -965,12 +1014,7 @@ const AdminPage: React.FC = () => {
                 <input type="number" required className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 font-mono outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.stock} onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})} />
             </div>
         </div>
-        <div className="space-y-2 mt-4">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Rich Product Description</label>
-            <div className="bg-white rounded-xl overflow-hidden border border-gray-200">
-                <ReactQuill theme="snow" value={editingProduct.description} onChange={val => setEditingProduct({...editingProduct, description: val})} />
-            </div>
-        </div>
+
     </div>
 
     {/* 2. Media with Toggles */}
@@ -989,7 +1033,7 @@ const AdminPage: React.FC = () => {
                         <div onClick={() => fileInputRef.current?.click()} className="w-full h-48 border-2 border-dashed border-gray-200 rounded-[2rem] bg-white flex flex-col items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group relative overflow-hidden">
                             {editingProduct.image ? (
                                 <>
-                                    <img src={editingProduct.image || undefined} className="w-full h-full object-cover" />
+                                    <img loading="lazy" src={editingProduct.image || undefined} className="w-full h-full object-cover" />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <Upload className="text-white" size={24} />
                                     </div>
@@ -1165,9 +1209,9 @@ const AdminPage: React.FC = () => {
                     {editingProduct.variants?.sizes && editingProduct.variants.sizes.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-4">
                             {editingProduct.variants.sizes.map(s => (
-                                <div key={s.id} className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 text-white rounded-lg border border-gray-700">
-                                    <span className="text-[10px] font-black">{s.name}</span>
-                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: {...editingProduct.variants!, sizes: editingProduct.variants!.sizes.filter(item => item.id !== s.id)}})} className="text-gray-400 hover:text-red-500"><Trash2 size={14}/></button>
+                                <div key={s.id} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-tr from-gray-800 to-gray-700 text-white rounded-full border border-gray-600 shadow-md">
+                                    <span className="text-xs font-black tracking-widest">{s.name}</span>
+                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: {...editingProduct.variants!, sizes: editingProduct.variants!.sizes.filter(item => item.id !== s.id)}})} className="text-gray-300 hover:text-red-400 transition-colors ml-1"><Trash2 size={14}/></button>
                                 </div>
                             ))}
                         </div>
@@ -1207,9 +1251,10 @@ const AdminPage: React.FC = () => {
                     {editingProduct.variants?.colors && editingProduct.variants.colors.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-4">
                             {editingProduct.variants.colors.map(c => (
-                                <div key={c.id} className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 text-white rounded-lg border border-gray-700">
-                                    <span className="text-[10px] font-black">{c.name}</span>
-                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: {...editingProduct.variants!, colors: editingProduct.variants!.colors.filter(item => item.id !== c.id)}})} className="text-gray-400 hover:text-red-500"><Trash2 size={14}/></button>
+                                <div key={c.id} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-tr from-gray-800 to-gray-700 text-white rounded-full border border-gray-600 shadow-md">
+                                    <div className="w-4 h-4 rounded-full border border-gray-500/50 shadow-inner" style={{ backgroundColor: c.name.toLowerCase() }} />
+                                    <span className="text-xs font-black tracking-widest">{c.name}</span>
+                                    <button type="button" onClick={() => setEditingProduct({...editingProduct, variants: {...editingProduct.variants!, colors: editingProduct.variants!.colors.filter(item => item.id !== c.id)}})} className="text-gray-300 hover:text-red-400 transition-colors ml-1"><Trash2 size={14}/></button>
                                 </div>
                             ))}
                         </div>
@@ -1219,14 +1264,41 @@ const AdminPage: React.FC = () => {
         )}
     </div>
 
-    <div className="md:col-span-1 pt-6 flex gap-4">
-        <button type="submit" className="flex-grow py-5 bg-orange-500 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl hover:bg-orange-600 transition-colors shadow-orange-500/20 active:scale-[0.98]">
-            {editingProduct.id ? 'Save Changes' : 'Publish Product'}
-        </button>
-        <button type="button" onClick={() => setEditingProduct(null)} className="px-8 py-5 bg-white border border-gray-200 text-gray-400 font-black uppercase tracking-widest rounded-2xl hover:bg-gray-50 transition-colors">
-            Cancel
-        </button>
+    
+    {/* 6. Details */}
+    <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
+        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-2">6. Details</h4>
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Short Description</label>
+                <input className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-bold transition-all" value={editingProduct.shortDescription || ''} onChange={e => setEditingProduct({...editingProduct, shortDescription: e.target.value})} placeholder="A quick summary..." />
+            </div>
+            <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Rich Product Description</label>
+                <div className="bg-white rounded-xl overflow-hidden border border-gray-200">
+                    <ReactQuill theme="snow" value={editingProduct.description} onChange={val => setEditingProduct({...editingProduct, description: val})} />
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div className="md:col-span-1 pt-6 flex flex-col gap-4">
+        {showSaveSuccess ? (
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex-grow py-5 bg-green-500 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl flex items-center justify-center gap-2">
+                <CheckCircle2 size={24} /> Published Successfully
+            </motion.div>
+        ) : (
+            <div className="flex gap-4">
+                <button type="submit" disabled={isSavingProduct} className="flex-grow py-5 bg-orange-500 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl hover:bg-orange-600 transition-colors shadow-orange-500/20 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2">
+                    {isSavingProduct ? <Loader2 className="animate-spin" size={24} /> : (editingProduct.id ? 'Save Changes' : 'Publish Product')}
+                </button>
+                <button type="button" onClick={() => setEditingProduct(null)} className="px-8 py-5 bg-white border border-gray-200 text-gray-400 font-black uppercase tracking-widest rounded-2xl hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+            </div>
+        )}
+    </div>
+
 </form>
                                 </motion.div>
                             </div>
@@ -2209,7 +2281,7 @@ const AdminPage: React.FC = () => {
                                                             <div className="flex items-center gap-4">
                                                                 <div className="w-12 h-12 bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm">
                                                                      {item.image ? (
-                                                                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                                                        <img loading="lazy" src={item.image} alt={item.name} className="w-full h-full object-cover" />
                                                                      ) : (
                                                                         <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400"><ShoppingBag size={16}/></div>
                                                                      )}

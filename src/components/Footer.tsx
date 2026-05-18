@@ -182,9 +182,9 @@ const Footer: React.FC = () => {
       <div className="container mx-auto px-4 pt-6 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest opacity-60">
         <p>© 2026 {settings.customization?.text?.websiteName || settings.logoText}. All Rights Reserved.</p>
         <div className="flex gap-4">
-          <img src="https://img.icons8.com/color/48/visa.png" alt="Visa" className="h-6 opacity-80" />
-          <img src="https://img.icons8.com/color/48/mastercard.png" alt="Mastercard" className="h-6 opacity-80" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Bkash_logo.png/512px-Bkash_logo.png" alt="bKash" className="h-4 opacity-80 object-contain" />
+          <img loading="lazy" src="https://img.icons8.com/color/48/visa.png" alt="Visa" className="h-6 opacity-80" />
+          <img loading="lazy" src="https://img.icons8.com/color/48/mastercard.png" alt="Mastercard" className="h-6 opacity-80" />
+          <img loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Bkash_logo.png/512px-Bkash_logo.png" alt="bKash" className="h-4 opacity-80 object-contain" />
           <span className="bg-white/5 px-2 py-1 rounded text-[10px]">{t('ক্যাশ অন ডেলিভারি', 'CASH ON DELIVERY')}</span>
         </div>
       </div>

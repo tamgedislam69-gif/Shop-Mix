@@ -150,14 +150,16 @@ const HomePage: React.FC = () => {
   const layout = settings.customization?.layout;
   const carousel = settings.customization?.carousel;
 
-  const filteredProducts = products.filter(p => {
-    const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
+  const filteredProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, selectedCategory, searchQuery]);
 
   // Carousel Logic
   useEffect(() => {
@@ -219,7 +221,7 @@ const HomePage: React.FC = () => {
                 className="absolute inset-0"
                >
                   {carousel?.urls && carousel.urls.length > 0 ? (
-                    <img 
+                    <img loading="lazy" 
                       src={carousel.urls[currentSlide] || undefined} 
                       className="w-full h-full object-cover"
                       alt="Banner"

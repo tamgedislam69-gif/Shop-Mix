@@ -20,8 +20,8 @@ const ProductPage: React.FC = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '', userName: '' });
 
-  const product = products.find(p => p.id === id);
-  const isFavorite = product ? isInWishlist(product.id) : false;
+  const product = React.useMemo(() => products.find(p => p.id === id), [products, id]);
+  const isFavorite = React.useMemo(() => product ? isInWishlist(product.id) : false, [product, isInWishlist]);
   const c = settings.customization?.colors;
   const v = settings.customization?.visibility;
   const l = settings.customization?.layout;
@@ -161,7 +161,7 @@ const ProductPage: React.FC = () => {
                     )}
                     style={selectedImage === img ? { borderColor: c?.primary || settings.primaryColor } : {}}
                    >
-                       <img src={img || undefined} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                       <img loading="lazy" src={img || undefined} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                    </button>
                ))}
           </div>

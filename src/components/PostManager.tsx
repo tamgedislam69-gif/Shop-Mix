@@ -86,7 +86,7 @@ const PostManager: React.FC = () => {
             className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-6 items-center group hover:shadow-md transition-all"
           >
             <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex-shrink-0">
-               <img src={post.image || undefined} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+               <img loading="lazy" src={post.image || undefined} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
             <div className="flex-grow space-y-2 text-center md:text-left">
                <div className="flex items-center justify-center md:justify-start gap-2">
